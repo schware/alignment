@@ -2,7 +2,10 @@
 
 # ADR-0002: Record the starting baseline — current skills, timeline, target market, existing portfolio
 
-- **Status**: Accepted (this is a snapshot, not a strategy — see ADR-0003 for the strategy built on it)
+- **Status**: Partially Superseded by ADR-0005 (the skills/timeline section
+  below is superseded — see ADR-0005 for the corrected professional
+  timeline; the target-transition-window, market, and no-existing-portfolio
+  facts below still stand)
 - **Date**: 2026-09-06
 - **Deciders**: Project owner
 
