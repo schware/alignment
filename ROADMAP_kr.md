@@ -118,6 +118,28 @@ C와 Python 양쪽 다 계획을 세운 바로 그날(2026-09-06) Claude와 함�
 빨리 끝난 이유의 상당 부분이 거기 있다. 아래 Phase 2/3의 목표 일정은
 Phase 2 자체가 두 번째 데이터 포인트를 줄 때까지 당초 추정대로 남겨둔다.
 
+## Phase 1.6 — `sun-moon-c-server`: port 통일, 서비스 기반 architecture로 리팩터링 (목표: 다음 세션)
+
+목표([ADR-0007](docs/adr/0007-prefer-process-isolation-over-port-splitting_kr.md)에
+따라): `sun-moon-c-server`를 `sun-moon-python-platform`의 서비스당
+프로세스 모델에 맞춘다 — ADR-0004의 "원칙은 언어를 넘어 전이된다"는
+논지가 Job/Step/Chunk 하나만이 아니라 서비스 분해 자체로도 확장된다는
+두 번째 구체적 증거.
+
+- `server`의 지금 모양을 다시 본다: CMake 타겟 하나, 프로세스 하나,
+  config로 모드(tcp/http/udp)를 골라 스레드로 돌리는 방식, 여러 전용
+  port(HTTP 8081, TCP 8090, UDP 8082, HTTPS 8443, 9010~9020 TCP-range
+  데모)에 흩어져 있음 — 그리고 이미 별도 일회성 바이너리인 `batch_runner`.
+- 업무 능력마다 독립적으로 실행 가능한 서비스/바이너리로
+  (`order-service`/`ai-agent-service`/`batch-service`를 거울삼아) 옮겨간다,
+  각각 일관된 port 하나씩 — 지금처럼 프로세스 하나가 config + 스레드로
+  여러 모드를 저글링하는 대신.
+- 아직 안 정한 것: C 쪽의 정확한 서비스 경계(기존 모드들이 어떤
+  서비스가 될지), `combined-server.json`/멀티스레드 편의 모드를
+  없앨지 옵션으로 남길지. 시작되면 `sun-moon-c-server` 자체 ADR이 필요함.
+- 아직 코드 변경 없음 — 이 Phase는 다음 세션에 시작한다(본인이 직접
+  정한 일정: "내일 토큰이 초기화되면").
+
 ## Phase 2 — Go 컴포넌트 하나 (목표: 약 4주, 12월 중순까지)
 
 목표: 절반씩 만든 세 개가 아니라, 잘 만든 Go 조각 **하나**로 polyglot

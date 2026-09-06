@@ -124,6 +124,30 @@ part of why it went faster than estimated. Phase 2/3's target dates below
 are left as originally estimated rather than pulled in, until Phase 2
 itself provides a second data point.
 
+## Phase 1.6 — `sun-moon-c-server`: unify ports, refactor toward service-based architecture (target: next session)
+
+Goal, per [ADR-0007](docs/adr/0007-prefer-process-isolation-over-port-splitting.md):
+bring `sun-moon-c-server` in line with `sun-moon-python-platform`'s
+service-per-process model — a second concrete proof (alongside Job/Step/
+Chunk) that ADR-0004's "principles transfer across languages" thesis
+extends to service decomposition itself, not just one design pattern.
+
+- Reconsider `server`'s current shape: one CMake target, one process,
+  config-driven mode selection (tcp/http/udp) via threads, spread across
+  several special-purpose ports (8081 HTTP, 8090 TCP, 8082 UDP, 8443
+  HTTPS, a 9010-9020 TCP-range demo) — plus `batch_runner`, already a
+  separate one-shot binary.
+- Move toward independent, separately-runnable services/binaries per
+  business capability (mirroring `order-service`/`ai-agent-service`/
+  `batch-service`), each with one consistent port, instead of one process
+  juggling multiple modes via config + threads.
+- Not yet decided: exact service boundaries for the C side (which
+  existing modes become which services), and whether the
+  `combined-server.json`/multi-thread convenience mode is removed or kept
+  as an option. Needs its own ADR in `sun-moon-c-server` once this starts.
+- No code changes yet — this phase starts next session (owner's own
+  scheduling note: "내일 토큰이 초기화되면").
+
 ## Phase 2 — one Go component (target: ~4 weeks, through mid-December)
 
 Goal: prove polyglot Platform capability with **one** well-built Go piece,
