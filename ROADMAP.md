@@ -210,6 +210,28 @@ is this phase's language).
   without treating it as a failure. Not every box in the original Platform
   diagram needs to be checked before this is a legitimate, presentable portfolio.
 
+## Parallel track (outside this roadmap's time budget) — Mobile App
+
+Per [ADR-0011](docs/adr/0011-mobile-app-parallel-portfolio-track.md),
+**not a Phase** — deliberately kept outside this roadmap's Q4 2026
+sequencing and scope-cutting rules, so it never competes with Phase
+1.6/2/3/4 for time. Noted here only so its existence is visible.
+
+- **What**: cross-platform (iOS/Android) app at `D:\Claude_Code\App`
+  (separate repo), Expo/React Native/TypeScript. Two features: paste a
+  meeting transcript → Claude API Markdown summary → GitHub commit; and a
+  morning-plan/evening-review daily schedule → GitHub commit as Markdown.
+- **Why it's recorded at all**: the owner confirmed this is intended as a
+  real portfolio signal (mobile + third-party AI/API integration), not a
+  career-irrelevant side tool — but explicitly parallel, not sequenced
+  against this repo's Q4 target.
+- **Status, 2026-09-06**: MVP scaffolded and smoke-tested (web preview) —
+  4 screens, GitHub PAT-based sync, on-device secure storage for
+  credentials, paste-only meeting input (no recording/STT yet).
+- If this track ever starts drawing on time budgeted for Phase 1.6/2/3,
+  that drift needs its own ADR (see ADR-0011's Consequences) rather than
+  silently eating into the Q4 timeline.
+
 ## Proposed (unscheduled) — Java: complete the three-way Batch comparison
 
 Per [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp.md), **not yet
