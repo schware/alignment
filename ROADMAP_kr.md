@@ -46,22 +46,27 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
 - 기본 CI(GitHub Actions): push마다 두 서비스의 pytest 스위트 실행.
   README의 초록색 체크 배지 하나가, 포트폴리오 저장소를 훑어보는
   리뷰어에게 실제 가치 이상으로 설득력 있다.
-- **ADR-0006에 따라 새로 추가**: Spring Batch의 Job → Step → Chunk
+- **완료, 2026-09-06**: Spring Batch의 Job → Step → Chunk
   (Reader/Processor/Writer) 모델을 구현하는 `batch-service` — `order-service`의
-  기존 공개 REST API로 주문 데이터를 읽어서 주기적 집계(예: 일별 주문
+  기존 공개 REST API(이 작업과 함께 추가된 진짜 `limit`/`offset`
+  페이지네이션 포함)로 주문 데이터를 읽어서 주기적 집계(일별 주문
   요약)를 만든다. 이 Phase에서 가장 시그널이 강한 추가다 — 가장 깊고 가장
-  최근인 8년의 전문 분야(ADR-0005)를 직접 재현하는데, 지금까지 만든 것
-  중엔 이걸 증명하는 게 하나도 없었다. reader/processor/writer 세부
-  설계는 이 작업이 실제로 시작될 때 그 저장소 자체의 ADR로 미룬다.
+  최근인 8년의 전문 분야(ADR-0005)를 직접 재현한다. 세부 설계는 그
+  저장소 자체의
+  [ADR-0010](https://github.com/schware/sun-moon-python-platform/blob/master/docs/adr/0010-batch-service-design_kr.md)에
+  있고, `sun-moon-c-server`의 C 구현과의 직접 비교도 포함돼 있다. 영향받는
+  패키지 전체에서 테스트 17개 통과; 실제 동작 중인 `order-service`(주문
+  10개, 매출 정확히 일치)로 end-to-end 검증함.
 
 **왜 이게 먼저인가**: 리스크가 가장 낮고 레버리지는 가장 큰 Phase다 —
 새 언어를 배울 필요 없이, 이미 만든 시스템을 "데모"에서 "방어 가능한 것"으로
 바꾼다. 아직 불안정한 Python 기반 위에 바로 Go/TypeScript로 건너뛰는 건
 실수일 것이다.
 
-## Phase 1.5 — C Batch + 저장소 간 통합 (목표: 약 2~3주, 12월 초까지)
+## Phase 1.5 — C Batch + 저장소 간 통합 — 완료, 2026-09-06
 
-**C 쪽: 완료, 2026-09-06.** Python 쪽(아래): 아직 미착수.
+**양쪽 다 완료.** C 쪽 2026-09-06(아래); Python 쪽(위 Phase 1)도 같은 날,
+`order-service`가 진짜 페이지네이션을 갖게 되자마자.
 
 목표(ADR-0006에 따라): 같은 Job/Step/Chunk 설계를 C에서도 증명한다 — 이
 언어엔 추상화를 위한 내장 메커니즘이 없어서, ADR-0004의 논지를 가장
@@ -93,8 +98,11 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
   "Alternatives considered"/"Consequences"는
   [`sun-moon-c-server`의 ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design_kr.md)
   참고.
-- 위 Python `batch-service`와의 직접 비교 메모는 아직 못 썼다 — Python
-  쪽이 먼저 있어야 가능하다.
+- **완료**: 위 Python `batch-service`와의 직접 비교 — 같은 job 의미,
+  같은 출력 모양, 같은 내결함성 모델. 다만 Python reader는 HTTP 위에서
+  진짜로 chunk에 bound되는 반면, 이 C reader는 아직 한 번에 전부
+  받아온다(이 저장소 README의 "Known gap" 메모와 갱신된 "Planned next
+  steps" 참고).
 
 **왜 Phase 1 바로 다음, Go보다 먼저인가**: C는 이미 아는 영역이다(저위험)
 — 완전히 새 언어(Go)를 다루기 전에 이걸 먼저 배치하면, 자신감이 높은
@@ -102,9 +110,13 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
 되고, Phase 2가 Go를 맨땅에서 시작하는 대신 두 번째 데이터 포인트 위에서
 시작하게 해준다.
 
-**일정 영향**: 이 Phase는 원래 초안엔 없었다 — Phase 2와 Phase 3를
-뒤로 미루고(아래 수정된 목표 참고), Phase 4를 자를 가능성을 낮추기보다는
-오히려 높인다("명시적 scope-cutting 규칙" 참고).
+**일정 영향, 추정 vs. 실제**: 이 Phase는 약 2~3주로 추정했었다; 실제로는
+C와 Python 양쪽 다 계획을 세운 바로 그날(2026-09-06) Claude와 함께
+완료됐다. 앞으로의 모든 Phase가 이 정도로 압축될 거라고 가정하기보다는
+하나의 보정 데이터 포인트로 삼을 만하다 — 이번 Phase는 이미 설계된
+패턴(Job/Step/Chunk)을 새로 발명하는 대신 두 번 재사용한 것이라, 추정보다
+빨리 끝난 이유의 상당 부분이 거기 있다. 아래 Phase 2/3의 목표 일정은
+Phase 2 자체가 두 번째 데이터 포인트를 줄 때까지 당초 추정대로 남겨둔다.
 
 ## Phase 2 — Go 컴포넌트 하나 (목표: 약 4주, 12월 중순까지)
 

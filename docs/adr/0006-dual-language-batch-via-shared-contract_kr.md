@@ -2,9 +2,11 @@
 
 # ADR-0006: Batch 컴포넌트를 두 번 만든다 — C(`sun-moon-c-server`)와 Python(`sun-moon-python-platform`) — 설계 하나, 가능하면 실제 계약도 하나 공유
 
-- **Status**: Accepted — C 쪽은 2026-09-06에 구현 완료(검증 내용은
-  [`sun-moon-c-server`의 ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design_kr.md)과
-  이 저장소 `ROADMAP_kr.md`의 Phase 1.5 참고); Python 쪽은 아직 미착수
+- **Status**: Accepted — 양쪽 다 2026-09-06에 구현 완료(검증 내용과 직접
+  비교는
+  [`sun-moon-c-server`의 ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design_kr.md),
+  [`sun-moon-python-platform`의 ADR-0010](https://github.com/schware/sun-moon-python-platform/blob/master/docs/adr/0010-batch-service-design_kr.md),
+  이 저장소 `ROADMAP_kr.md`의 Phase 1.5 참고)
 - **Date**: 2026-09-06
 - **Deciders**: 본인
 

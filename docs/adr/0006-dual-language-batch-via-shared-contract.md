@@ -2,10 +2,11 @@
 
 # ADR-0006: Build the Batch component twice — C (`sun-moon-c-server`) and Python (`sun-moon-python-platform`) — sharing one design and, where possible, one live contract
 
-- **Status**: Accepted — C side implemented 2026-09-06 (see
-  [`sun-moon-c-server`'s ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design.md)
-  and this repo's `ROADMAP.md` Phase 1.5 for verification details); Python
-  side still pending
+- **Status**: Accepted — both sides implemented 2026-09-06 (see
+  [`sun-moon-c-server`'s ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design.md),
+  [`sun-moon-python-platform`'s ADR-0010](https://github.com/schware/sun-moon-python-platform/blob/master/docs/adr/0010-batch-service-design.md),
+  and this repo's `ROADMAP.md` Phase 1.5 for verification details and the
+  direct comparison)
 - **Date**: 2026-09-06
 - **Deciders**: Project owner
 

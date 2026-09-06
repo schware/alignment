@@ -49,23 +49,28 @@ engineering," without adding a new language yet.
 - Basic CI (GitHub Actions): run both services' pytest suites on every
   push. A green check-badge in the README is disproportionately persuasive
   to a reviewer skimming a portfolio repo.
-- **New, per ADR-0006**: a `batch-service` implementing Spring Batch's
+- **Done, 2026-09-06**: a `batch-service` implementing Spring Batch's
   Job → Step → Chunk (Reader/Processor/Writer) model, reading order data
-  through `order-service`'s existing public REST API and writing a
-  periodic aggregate (e.g. a daily order summary). This is the highest-signal
+  through `order-service`'s existing public REST API (now with real
+  `limit`/`offset` pagination, added alongside this work) and writing a
+  periodic aggregate (a daily order summary). This is the highest-signal
   addition to this phase — it directly reproduces the deepest, most recent
-  8 years of professional specialization (ADR-0005), which nothing built
-  so far actually demonstrates. Detailed reader/processor/writer design
-  deferred to that repo's own ADR when this work starts.
+  8 years of professional specialization (ADR-0005). Design details in
+  that repo's own
+  [ADR-0010](https://github.com/schware/sun-moon-python-platform/blob/master/docs/adr/0010-batch-service-design.md),
+  including the direct comparison against `sun-moon-c-server`'s C
+  implementation. 17 tests passing across the affected packages; verified
+  end-to-end against a live `order-service` (10 orders, revenue matched exactly).
 
 **Why this comes first**: it's the lowest-risk, highest-leverage phase —
 no new language to learn, and it converts an already-built system from
 "demo" to "defensible." Skipping straight to Go/TypeScript with a shaky
 Python foundation would be a mistake.
 
-## Phase 1.5 — C Batch + cross-repo integration (target: ~2-3 weeks, into early December)
+## Phase 1.5 — C Batch + cross-repo integration — done, 2026-09-06
 
-**C side: done, 2026-09-06.** Python side (below): still pending.
+**Both sides done.** C side 2026-09-06 (below); Python side (in Phase 1
+above) same day, once `order-service` gained real pagination.
 
 Goal, per ADR-0006: prove the same Job/Step/Chunk design in C — a language
 with no built-in abstraction mechanism, making this the hardest and
@@ -97,8 +102,11 @@ holds even across a completely different, older tech stack.
   cron/systemd-timer scheduling. See
   [`sun-moon-c-server`'s ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design.md)
   for the full design and its own "Alternatives considered"/"Consequences."
-- Direct comparison note against the Python `batch-service` (above) is
-  still pending — needs that Python side to exist first.
+- **Done**: direct comparison against the Python `batch-service` — same
+  job semantics, same output shape, same fault-tolerance model, but the
+  Python reader is genuinely chunk-bounded over HTTP while this C reader
+  still fetches everything in one call (see the "Known gap" note this
+  repo's own README now carries, and its updated "Planned next steps").
 
 **Why right after Phase 1, before Go**: C is already-known territory (low
 risk) — sequencing it before the genuinely new language (Go) builds a
@@ -106,10 +114,15 @@ finished comparison pair (Python batch vs. C batch, same design) while
 confidence is high, and gives Phase 2 a second data point to build on
 rather than starting Go cold.
 
-**Schedule impact**: this phase did not exist in the original draft — it
-pushes Phase 2 and Phase 3 later (see revised targets below) and makes
-cutting Phase 4 (see "Explicit scope-cutting rule") more likely rather
-than less.
+**Schedule impact, actual vs. estimated**: this phase was estimated at
+~2-3 weeks; both the C and Python sides actually shipped the same day
+(2026-09-06) they were scoped, working with Claude. Worth treating as a
+calibration point rather than assuming every future phase compresses this
+much — this particular phase reused an already-designed pattern (Job/
+Step/Chunk) twice rather than inventing something new, which is a big
+part of why it went faster than estimated. Phase 2/3's target dates below
+are left as originally estimated rather than pulled in, until Phase 2
+itself provides a second data point.
 
 ## Phase 2 — one Go component (target: ~4 weeks, through mid-December)
 
