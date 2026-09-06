@@ -8,11 +8,14 @@
 바뀔 것으로 예상한다. Phase의 범위가 실질적으로 바뀌면, 이 파일의 이력을
 조용히 지우는 대신 **왜** 바뀌었는지 ADR을 쓴다.
 
-**이 로드맵이 딛고 선 baseline**: ADR-0002 (C/C++/C#/Java + 서버통신/POS
-배경, 아직 cloud-native/AI-ML 경험 없음, 2026-09-06부터 2026년 12월
-타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음). **따르는 전략**:
-ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에 의도적으로
-걸치는 Platform 하나).
+**이 로드맵이 딛고 선 baseline**: ADR-0002/ADR-0005 (총 16년 — MFC
+1~4년차, C++ Server 5~8년차, C# POS Client 5~16년차, Java/Spring Boot
+REST+Batch 9~16년차 — 아직 cloud-native/AI-ML 경험 없음, 2026-09-06부터
+Q4 2026 타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음). **따르는
+전략**: ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에
+의도적으로 걸치는 Platform 하나), 여기에 ADR-0004(새 언어마다 관통하는
+기술적 실 하나)와 ADR-0006(Batch를 C와 Python 둘 다, 공유 계약을 통해
+만듦)이 더해짐.
 
 ## Phase 0 — 완료 (2026-09-06 기준)
 
@@ -22,6 +25,10 @@ HTTP/TCP, 서비스 간 Redis pub/sub, 통과하는 테스트 9개, 근거를 �
 ADR-0000~0009. 이것만으로도 이미 **Backend Engineering**과 **AI/ML
 Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하고
 동작하지만, 지금은 결정론적 오프라인 provider 기준 — Phase 1 참고).
+
+이미 GitHub에 올라간 것 하나 더: `sun-moon-c-server` — 기존에 만든 C
+서버 프레임워크(libuv 기반 TCP/HTTP/WS/TLS, 1만 동시접속까지 검증됨),
+이제 C 언어 방향의 근거지가 됨(새로 추가된 Phase 1.5와 ADR-0006 참고).
 
 ## Phase 1 — Python 쪽을 깊게 만든다 (목표: 약 6주, 10월 말까지)
 
@@ -39,13 +46,49 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
 - 기본 CI(GitHub Actions): push마다 두 서비스의 pytest 스위트 실행.
   README의 초록색 체크 배지 하나가, 포트폴리오 저장소를 훑어보는
   리뷰어에게 실제 가치 이상으로 설득력 있다.
+- **ADR-0006에 따라 새로 추가**: Spring Batch의 Job → Step → Chunk
+  (Reader/Processor/Writer) 모델을 구현하는 `batch-service` — `order-service`의
+  기존 공개 REST API로 주문 데이터를 읽어서 주기적 집계(예: 일별 주문
+  요약)를 만든다. 이 Phase에서 가장 시그널이 강한 추가다 — 가장 깊고 가장
+  최근인 8년의 전문 분야(ADR-0005)를 직접 재현하는데, 지금까지 만든 것
+  중엔 이걸 증명하는 게 하나도 없었다. reader/processor/writer 세부
+  설계는 이 작업이 실제로 시작될 때 그 저장소 자체의 ADR로 미룬다.
 
 **왜 이게 먼저인가**: 리스크가 가장 낮고 레버리지는 가장 큰 Phase다 —
 새 언어를 배울 필요 없이, 이미 만든 시스템을 "데모"에서 "방어 가능한 것"으로
 바꾼다. 아직 불안정한 Python 기반 위에 바로 Go/TypeScript로 건너뛰는 건
 실수일 것이다.
 
-## Phase 2 — Go 컴포넌트 하나 (목표: 약 4주, 11월 말까지)
+## Phase 1.5 — C Batch + 저장소 간 통합 (목표: 약 2~3주, 12월 초까지)
+
+목표(ADR-0006에 따라): 같은 Job/Step/Chunk 설계를 C에서도 증명한다 — 이
+언어엔 추상화를 위한 내장 메커니즘이 없어서, ADR-0004의 논지를 가장
+어렵게, 그래서 가장 설득력 있게 증명하는 경우가 된다 — 그리고
+`sun-moon-python-platform`의 "코드 공유가 아니라 계약"이라는 architecture가
+완전히 다르고 더 오래된 기술 스택에 걸쳐서도 성립하는지 증명한다.
+
+- `sun-moon-c-server`에: 진짜 DB 클라이언트 추가(Oracle이 아니라 우선
+  SQLite로 — 그 저장소 README에 이미 gap으로 표시돼 있음),
+  `core_submit_work()` 뒤에, `db_demo_service.c`의 시뮬레이션을 대체.
+- `order-service`의 공개 REST API를 호출하는 C용 HTTP 클라이언트(예:
+  libcurl, CMake에 연결) 추가 — 이미 `ai-agent-service`가 쓰고 있는 같은
+  계약을, 이제 C에서도 동작한다는 걸 증명.
+- Job/Step/Chunk 패턴을 C 관용구로 손수 구현(Reader/Processor/Writer
+  자리에 함수 포인터를 담은 구조체)하고 실제 배치 잡 하나를 만든다, 위
+  Python `batch-service`와 충분히 비슷하게 만들어서
+  `sun-moon-c-server` 자체 ADR에 직접 비교 메모를 쓸 수 있게.
+
+**왜 Phase 1 바로 다음, Go보다 먼저인가**: C는 이미 아는 영역이다(저위험)
+— 완전히 새 언어(Go)를 다루기 전에 이걸 먼저 배치하면, 자신감이 높은
+상태에서 완성된 비교쌍(Python batch vs. C batch, 같은 설계)을 만들게
+되고, Phase 2가 Go를 맨땅에서 시작하는 대신 두 번째 데이터 포인트 위에서
+시작하게 해준다.
+
+**일정 영향**: 이 Phase는 원래 초안엔 없었다 — Phase 2와 Phase 3를
+뒤로 미루고(아래 수정된 목표 참고), Phase 4를 자를 가능성을 낮추기보다는
+오히려 높인다("명시적 scope-cutting 규칙" 참고).
+
+## Phase 2 — Go 컴포넌트 하나 (목표: 약 4주, 12월 중순까지)
 
 목표: 절반씩 만든 세 개가 아니라, 잘 만든 Go 조각 **하나**로 polyglot
 Platform 역량을 증명한다 — 그리고 ADR-0004에 따라, 그냥 "Go를 써본다"가
@@ -78,7 +121,7 @@ completion-callback에 흩어졌던 domain logic)를 의도적으로 해결하�
 완성되고 잘 문서화된 Go 서비스 하나가, 미완성 세 개보다 더 강한 인터뷰
 소재다.
 
-## Phase 3 — DevOps 다듬기 (목표: 약 2~3주, 12월 중순까지)
+## Phase 3 — DevOps 다듬기 (목표: 약 2~3주, Q4 2026을 넘겨 전환 시점까지 이어질 가능성 높음 — 위 일정 메모 참고)
 
 목표: Phase 1~2의 **AI/ML + Backend** 작업이 실제로 운영 가능한 시스템처럼
 보이고 동작하게 만든다 — DevOps/SRE 시그널은 대부분 여기서 나온다.
@@ -99,16 +142,25 @@ completion-callback에 흩어졌던 domain logic)를 의도적으로 해결하�
 
 ## 명시적 scope-cutting 규칙
 
-시간이 부족해지면, Phase 1/2의 깊이를 깎기 전에 이 목록의 아래쪽(Phase 4,
-그다음 Phase 3 후반부)부터 잘라낸다 — 이게 등장할 만한 어떤 인터뷰
+시간이 부족해지면, Phase 1/1.5/2의 깊이를 깎기 전에 이 목록의 아래쪽(Phase
+4, 그다음 Phase 3 후반부)부터 잘라낸다 — 이게 등장할 만한 어떤 인터뷰
 대화에서도, 작지만 완성되고 잘 문서화된 시스템이 방대하지만 절반만 만든
-시스템보다 낫다.
+시스템보다 낫다. Phase 1.5(ADR-0006)를 추가한 건 Phase 4(TypeScript
+Dashboard)가 통째로 잘릴 가능성을 낮추는 게 아니라 오히려 높인다 — 이건
+의도적인 트레이드오프였다: Batch는 8년의 전문성(ADR-0005)을 직접
+증명하고, Dashboard는 전혀 경험 없는 스킬을 증명한다. 둘 중 하나를
+골라야 한다면 Phase 1.5가 이긴다.
 
 ## 아직 안 정한 것
 
 - "Q4 2026"이 "전환 전에 포트폴리오가 인터뷰 준비 완료 상태여야 한다"는
   뜻인지, "전환 직후에도 계속 만들어간다"는 뜻인지(ADR-0002에서 열어둔
-  부분) — Phase 3/4를 얼마나 압축할지에 영향.
-- 이 저장소와 앞으로 `sun-moon-python-platform`의 GitHub 공개 범위 — 이
-  저장소의 타임라인/전환 관련 내용이 순수 architecture 근거보다 더
-  민감하다는 점을 감안해야 함.
+  부분) — Phase 1.5가 이미 Phase 3를 원래 Q4 타겟 너머로 밀어냈으니
+  (위 그 Phase의 메모 참고) 이제 더 시급한 질문이 됐다.
+
+## 이미 정한 것 (기록용)
+
+- GitHub 공개 범위: `sun-moon-python-platform`과 이 저장소 둘 다
+  Public이다, 의도적으로 — 여기 담긴 개인적/타임라인 내용까지 포함해서.
+  본인의 현재 회사 대표도 이미 알고 있는 상황이고, 공개 상태 자체를
+  결심을 다지는 장치로 의도적으로 쓰고 있다.

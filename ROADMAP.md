@@ -9,11 +9,14 @@ change as phases complete and priorities shift. When a phase's scope
 changes materially, write an ADR about *why* rather than silently editing
 this file's history away.
 
-**Baseline this is built on**: ADR-0002 (C/C++/C#/Java + server-comms/POS
-background, no cloud-native/AI/ML experience yet, ~3.5 months from
-2026-09-06 to a December 2026 target, market-agnostic, no existing
+**Baseline this is built on**: ADR-0002/ADR-0005 (16 years total — MFC
+years 1-4, C++ server years 5-8, C# POS Client years 5-16, Java/Spring
+Boot REST+Batch years 9-16 — no cloud-native/AI/ML experience yet, ~3.5
+months from 2026-09-06 to a Q4 2026 target, market-agnostic, no existing
 portfolio). **Strategy this follows**: ADR-0003 (one Platform, deliberately
-spanning Backend/Platform, AI/ML, and DevOps/SRE signal).
+spanning Backend/Platform, AI/ML, and DevOps/SRE signal), extended by
+ADR-0004 (a technical throughline across every new language) and ADR-0006
+(Batch built twice, in C and Python, against a shared contract).
 
 ## Phase 0 — done (as of 2026-09-06)
 
@@ -24,6 +27,11 @@ HTTP/TCP, Redis pub/sub between services, 9 passing tests, ADR-0000 through
 evidence for **Backend Engineering** and **AI/ML Engineering** (the AI
 Agent loop exists and works, currently against a deterministic offline
 provider — see Phase 1).
+
+Also already on GitHub: `sun-moon-c-server` — the pre-existing C server
+framework (libuv-based TCP/HTTP/WS/TLS, verified to 10k concurrent
+connections), now the home for the C-language direction (see the new
+Phase 1.5 and ADR-0006).
 
 ## Phase 1 — deepen the Python side (target: ~6 weeks, through late October)
 
@@ -41,13 +49,51 @@ engineering," without adding a new language yet.
 - Basic CI (GitHub Actions): run both services' pytest suites on every
   push. A green check-badge in the README is disproportionately persuasive
   to a reviewer skimming a portfolio repo.
+- **New, per ADR-0006**: a `batch-service` implementing Spring Batch's
+  Job → Step → Chunk (Reader/Processor/Writer) model, reading order data
+  through `order-service`'s existing public REST API and writing a
+  periodic aggregate (e.g. a daily order summary). This is the highest-signal
+  addition to this phase — it directly reproduces the deepest, most recent
+  8 years of professional specialization (ADR-0005), which nothing built
+  so far actually demonstrates. Detailed reader/processor/writer design
+  deferred to that repo's own ADR when this work starts.
 
 **Why this comes first**: it's the lowest-risk, highest-leverage phase —
 no new language to learn, and it converts an already-built system from
 "demo" to "defensible." Skipping straight to Go/TypeScript with a shaky
 Python foundation would be a mistake.
 
-## Phase 2 — one Go component (target: ~4 weeks, through late November)
+## Phase 1.5 — C Batch + cross-repo integration (target: ~2-3 weeks, into early December)
+
+Goal, per ADR-0006: prove the same Job/Step/Chunk design in C — a language
+with no built-in abstraction mechanism, making this the hardest and
+therefore most convincing proof of ADR-0004's thesis — and prove
+`sun-moon-python-platform`'s "contract, not shared code" architecture
+holds even across a completely different, older tech stack.
+
+- In `sun-moon-c-server`: add a real DB client (SQLite to start, not
+  Oracle — that repo's README already flagged this gap) behind
+  `core_submit_work()`, replacing the `db_demo_service.c` simulation.
+- Add a C HTTP client (e.g. libcurl, wired into CMake) that calls
+  `order-service`'s public REST API — the same contract `ai-agent-service`
+  already consumes, now proven to work from C too.
+- Implement the Job/Step/Chunk pattern by hand in C idioms (a struct of
+  function pointers standing in for Reader/Processor/Writer) and one
+  concrete batch job, mirroring the Python `batch-service` above closely
+  enough to write a direct comparison note in `sun-moon-c-server`'s own ADR.
+
+**Why right after Phase 1, before Go**: C is already-known territory (low
+risk) — sequencing it before the genuinely new language (Go) builds a
+finished comparison pair (Python batch vs. C batch, same design) while
+confidence is high, and gives Phase 2 a second data point to build on
+rather than starting Go cold.
+
+**Schedule impact**: this phase did not exist in the original draft — it
+pushes Phase 2 and Phase 3 later (see revised targets below) and makes
+cutting Phase 4 (see "Explicit scope-cutting rule") more likely rather
+than less.
+
+## Phase 2 — one Go component (target: ~4 weeks, through mid-December)
 
 Goal: prove polyglot Platform capability with **one** well-built Go piece,
 not three half-built ones — and, per ADR-0004, deliberately use it to
@@ -79,7 +125,7 @@ split**: ADR-0003 already flags execution risk from spanning too much.
 One finished, well-documented Go service is a stronger interview artifact
 than three unfinished ones.
 
-## Phase 3 — DevOps polish (target: ~2-3 weeks, through mid-December)
+## Phase 3 — DevOps polish (target: ~2-3 weeks, likely spilling past Q4 2026 into the transition window itself — see schedule note above)
 
 Goal: make the **AI/ML + Backend** work in Phases 1-2 look and run like a
 real, operable system — this is where the DevOps/SRE signal mostly comes from.
@@ -101,15 +147,24 @@ real, operable system — this is where the DevOps/SRE signal mostly comes from.
 ## Explicit scope-cutting rule
 
 If time runs short, cut from the bottom of this list (Phase 4, then late
-Phase 3) before cutting depth from Phase 1/2 — a smaller, finished,
+Phase 3) before cutting depth from Phase 1/1.5/2 — a smaller, finished,
 well-documented system beats a sprawling, half-finished one in every
-interview conversation this is likely to come up in.
+interview conversation this is likely to come up in. Adding Phase 1.5
+(ADR-0006) makes Phase 4 (TypeScript Dashboard) more likely to be cut
+entirely, not less — that tradeoff was made deliberately: Batch directly
+proves 8 years of specialization (ADR-0005), while the Dashboard proves a
+skill with no prior exposure at all. If forced to choose, Phase 1.5 wins.
 
 ## Not yet decided
 
 - Whether "Q4 2026" means "portfolio must be interview-ready before the
   transition" or "keep building immediately after it" (ADR-0002 flagged
-  this as open) — affects how aggressively Phase 3/4 get compressed.
-- GitHub visibility for this repo and for `sun-moon-python-platform` going
-  forward, given this repo's timeline/company-departure content is more
-  sensitive than pure architecture reasoning.
+  this as open) — now more pressing, since Phase 1.5 already pushes Phase
+  3 past the original Q4 target (see that phase's note above).
+
+## Already decided (for the record)
+
+- GitHub visibility: both `sun-moon-python-platform` and this repo are
+  Public, deliberately, including the personal/timeline content here — the
+  owner's own current employer is already aware, and public visibility is
+  intentionally being used as a commitment device.
