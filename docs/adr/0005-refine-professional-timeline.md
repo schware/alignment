@@ -12,30 +12,42 @@
 
 ADR-0002 recorded the skills baseline as a flat list (C, C++, C#, Java —
 server comms + POS client), which flattened four languages/tracks into an
-undifferentiated blob. Follow-up conversation clarified the actual
-structure, and it turns out to matter: this isn't four disconnected
-experiences, it's ~12 years of continuous, overlapping work in one coherent
-domain, with a clear center of gravity in the most recent 8 years.
+undifferentiated blob. Two rounds of follow-up conversation (both on
+2026-09-06, before this ADR was referenced anywhere else) clarified the
+actual structure, and it turns out to matter: this isn't four disconnected
+experiences, it's ~16 years spanning one coherent domain, with a clear
+center of gravity in the most recent 8 years. Because both corrections
+landed in the same sitting, before anything else depended on this ADR's
+first version, they're merged into this single revision rather than
+spawning a separate superseding ADR for each — see this repo's README/
+ADR-0001 discussion on when an in-place edit is acceptable vs. when a
+decision needs a fresh superseding ADR.
 
 ## Decision
 
 Record the corrected timeline as the baseline going forward:
 
-- **Total professional experience: ~12 years**, entirely within a
-  retail/commerce technology domain (POS client software, server
-  communication protocols, backend REST/Batch services for multi-store
-  systems like the department-store/mall case in ADR-0004).
-- **Years 1-4**: C++ server-side development, as a standalone/dedicated track.
-- **Years 1-12 (the entire career so far)**: C# POS Client development —
-  continuous throughout, running concurrently with both the early C++
-  track and the later Java track. This is the single longest-running
-  thread across the whole career.
-- **Years 5-12 (the most recent 8 years)**: Java + Spring Boot — REST API
+- **Total professional experience: ~16 years**, entirely within a
+  retail/commerce technology domain (desktop client/server software, POS
+  client software, server communication protocols, backend REST/Batch
+  services for multi-store systems like the department-store/mall case in
+  ADR-0004).
+- **Years 1-4**: MFC-based Client and Server development (Windows
+  desktop). Explicitly *not* sustained work on one continuous program —
+  more varied, shorter-lived project work. Foundational experience, not a
+  depth pillar the way the later tracks are.
+- **Years 5-8**: C++ server-side development, as a standalone/dedicated
+  track (this is the IOCP-based multi-tenant system discussed in ADR-0004).
+- **Years 5-16 (12 years, the entire career from year 5 onward)**: C# POS
+  Client development — continuous throughout, running concurrently with
+  both the C++ track (years 5-8) and the later Java track (years 9-16).
+  This is the single longest-running thread across the whole career.
+- **Years 9-16 (the most recent 8 years)**: Java + Spring Boot — REST API
   development and Batch processing. This is the most recent and,
   by sustained depth, the primary current specialization.
 
 This reframes the transition's narrative: not "an engineer starting a
-portfolio from scratch," but **a 12-year senior engineer generalizing deep,
+portfolio from scratch," but **a 16-year senior engineer generalizing deep,
 consistently-applied enterprise experience across new languages and
 paradigms** — directly in service of ADR-0004's thesis (the same
 architectural judgment transfers across languages) and ADR-0003's strategy
@@ -60,7 +72,7 @@ superseding ADR (not an edit to ADR-0002) per this repo's own ADR-0001 rule.
   a new stack. Still open (not yet decided as of this ADR): which
   language to build it in, and where it slots into `ROADMAP.md`'s phases.
 - ADR-0002's blanket "no existing portfolio" is worth re-checking now that
-  the full timeline is visible — 12 years may have produced other
+  the full timeline is visible — 16 years may have produced other
   professional artifacts (certifications, internal tools, conference talks,
   etc.) not yet mentioned. Not assumed either way here; flagged as open.
 
