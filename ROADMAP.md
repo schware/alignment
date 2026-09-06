@@ -50,13 +50,23 @@ Python foundation would be a mistake.
 ## Phase 2 — one Go component (target: ~4 weeks, through late November)
 
 Goal: prove polyglot Platform capability with **one** well-built Go piece,
-not three half-built ones.
+not three half-built ones — and, per ADR-0004, deliberately use it to
+resolve a specific real pain point (completion-callback-fragmented domain
+logic from past IOCP-based C++ work) rather than just "trying Go."
 
+- Optional 1-2 day warm-up first: revisit C#'s `async`/`await` (already
+  known) purely to re-confirm the IOCP → linear-async-code lesson from
+  ADR-0004 before tackling a genuinely new language — low risk, fast confidence check.
 - Candidate: a Go-based Gateway/Transport service in front of
   `order-service`/`ai-agent-service` — conceptually similar to the
   "combined-server" idea from the original C project, and a direct bridge
   from the owner's strongest existing skill (C/C++ systems programming —
-  Go's mental model is close) into a new, in-demand language.
+  Go's mental model is close) into a new, in-demand language. Its ADR (in
+  `sun-moon-python-platform`) should explicitly compare goroutines/channels
+  against the completion-callback style from the department-store system —
+  see ADR-0004.
+- Rust deprioritized behind Go for now (ADR-0004) — Go's CSP model is the
+  higher-contrast lesson to prove out first; Rust's async/await can follow later.
 - Scope deliberately small: one Go binary, one clear job (route/proxy
   requests, maybe collect basic metrics), well-tested, with its own ADR in
   `sun-moon-python-platform` explaining the choice.

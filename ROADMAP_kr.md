@@ -48,13 +48,24 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
 ## Phase 2 — Go 컴포넌트 하나 (목표: 약 4주, 11월 말까지)
 
 목표: 절반씩 만든 세 개가 아니라, 잘 만든 Go 조각 **하나**로 polyglot
-Platform 역량을 증명한다.
+Platform 역량을 증명한다 — 그리고 ADR-0004에 따라, 그냥 "Go를 써본다"가
+아니라 실제로 겪은 구체적인 문제(과거 IOCP 기반 C++ 작업에서
+completion-callback에 흩어졌던 domain logic)를 의도적으로 해결하는 데
+쓴다.
 
+- 선택적 1~2일 몸풀기: Go 들어가기 전에 C#의 `async`/`await`(이미
+  알고 있음)를 다시 보면서 ADR-0004의 "IOCP → 선형 async 코드" 교훈을
+  재확인한다 — 저위험, 빠른 확신 체크.
 - 후보: `order-service`/`ai-agent-service` 앞단의 Go 기반
   Gateway/Transport 서비스 — 원래 C 프로젝트의 "combined-server" 아이디어와
   개념적으로 비슷하고, 본인의 가장 강한 기존 스킬(C/C++ 시스템 프로그래밍
   — Go의 사고모델이 가깝다)을 새롭고 수요 있는 언어로 옮기는 직접적인
-  다리가 된다.
+  다리가 된다. 이 컴포넌트의 ADR(`sun-moon-python-platform`에 작성)에는
+  goroutine/channel을 백화점 시스템의 completion-callback 스타일과 명시적으로
+  비교하는 내용을 넣어야 한다 — ADR-0004 참고.
+- Rust는 당분간 Go보다 뒤로 미룬다(ADR-0004) — Go의 CSP 모델이 먼저
+  증명해야 할 더 대조적인 교훈이고, Rust의 async/await는 나중에 이어가면
+  된다.
 - 범위는 의도적으로 작게: Go 바이너리 하나, 명확한 역할 하나(요청
   라우팅/프록시, 어쩌면 기본 메트릭 수집), 잘 테스트되고,
   `sun-moon-python-platform`에 그 선택을 설명하는 자체 ADR도 딸려 있게.
