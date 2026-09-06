@@ -65,22 +65,40 @@ Python foundation would be a mistake.
 
 ## Phase 1.5 — C Batch + cross-repo integration (target: ~2-3 weeks, into early December)
 
+**C side: done, 2026-09-06.** Python side (below): still pending.
+
 Goal, per ADR-0006: prove the same Job/Step/Chunk design in C — a language
 with no built-in abstraction mechanism, making this the hardest and
 therefore most convincing proof of ADR-0004's thesis — and prove
 `sun-moon-python-platform`'s "contract, not shared code" architecture
 holds even across a completely different, older tech stack.
 
-- In `sun-moon-c-server`: add a real DB client (SQLite to start, not
-  Oracle — that repo's README already flagged this gap) behind
-  `core_submit_work()`, replacing the `db_demo_service.c` simulation.
-- Add a C HTTP client (e.g. libcurl, wired into CMake) that calls
-  `order-service`'s public REST API — the same contract `ai-agent-service`
-  already consumes, now proven to work from C too.
-- Implement the Job/Step/Chunk pattern by hand in C idioms (a struct of
-  function pointers standing in for Reader/Processor/Writer) and one
-  concrete batch job, mirroring the Python `batch-service` above closely
-  enough to write a direct comparison note in `sun-moon-c-server`'s own ADR.
+- ~~In `sun-moon-c-server`: add a real DB client (SQLite)~~ — **deliberately
+  not done as part of this phase.** `sun-moon-c-server`'s own
+  [ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design.md)
+  scoped this out explicitly: the batch job's storage is files
+  (NDJSON + JSON), not a database, so the `db_demo_service.c` simulated-DB
+  gap stays open as its own separate, still-unscheduled item on that
+  repo's "Planned next steps."
+- **Done**: a C HTTP client (libcurl, wired into CMake) that calls
+  `order-service`'s public `GET /orders` — the same contract
+  `ai-agent-service` already consumes, now proven to work from C too.
+- **Done**: the Job/Step/Chunk pattern implemented by hand in C idioms (a
+  struct of function pointers standing in for Reader/Processor/Writer) —
+  `include/batch.h`/`src/batch.c` (generic engine) +
+  `src/services/order_summary_batch_job.c` (the concrete job: sums
+  revenue per chunk, streams NDJSON, writes a JSON summary + JSON
+  execution report). `config/batch-job.json` drives it, matching the
+  "manage batch via JSON" instruction this phase was built to. Verified
+  end-to-end against a live `order-service`: single-chunk
+  (`chunk_size: 5`, 3 orders) and multi-chunk (`chunk_size: 2`, 2+1)
+  both produced correct revenue totals; `scripts/run_batch.sh` correctly
+  propagates `batch_runner`'s exit code (0 success / 1 on failure) for
+  cron/systemd-timer scheduling. See
+  [`sun-moon-c-server`'s ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design.md)
+  for the full design and its own "Alternatives considered"/"Consequences."
+- Direct comparison note against the Python `batch-service` (above) is
+  still pending — needs that Python side to exist first.
 
 **Why right after Phase 1, before Go**: C is already-known territory (low
 risk) — sequencing it before the genuinely new language (Go) builds a

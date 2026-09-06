@@ -61,22 +61,40 @@ Engineering**에 대한 부분적 증거가 된다(AI Agent 루프는 존재하�
 
 ## Phase 1.5 — C Batch + 저장소 간 통합 (목표: 약 2~3주, 12월 초까지)
 
+**C 쪽: 완료, 2026-09-06.** Python 쪽(아래): 아직 미착수.
+
 목표(ADR-0006에 따라): 같은 Job/Step/Chunk 설계를 C에서도 증명한다 — 이
 언어엔 추상화를 위한 내장 메커니즘이 없어서, ADR-0004의 논지를 가장
 어렵게, 그래서 가장 설득력 있게 증명하는 경우가 된다 — 그리고
 `sun-moon-python-platform`의 "코드 공유가 아니라 계약"이라는 architecture가
 완전히 다르고 더 오래된 기술 스택에 걸쳐서도 성립하는지 증명한다.
 
-- `sun-moon-c-server`에: 진짜 DB 클라이언트 추가(Oracle이 아니라 우선
-  SQLite로 — 그 저장소 README에 이미 gap으로 표시돼 있음),
-  `core_submit_work()` 뒤에, `db_demo_service.c`의 시뮬레이션을 대체.
-- `order-service`의 공개 REST API를 호출하는 C용 HTTP 클라이언트(예:
-  libcurl, CMake에 연결) 추가 — 이미 `ai-agent-service`가 쓰고 있는 같은
-  계약을, 이제 C에서도 동작한다는 걸 증명.
-- Job/Step/Chunk 패턴을 C 관용구로 손수 구현(Reader/Processor/Writer
-  자리에 함수 포인터를 담은 구조체)하고 실제 배치 잡 하나를 만든다, 위
-  Python `batch-service`와 충분히 비슷하게 만들어서
-  `sun-moon-c-server` 자체 ADR에 직접 비교 메모를 쓸 수 있게.
+- ~~`sun-moon-c-server`에 진짜 DB 클라이언트(SQLite) 추가~~ — **이번
+  Phase에서는 의도적으로 하지 않음.** `sun-moon-c-server` 자체
+  [ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design_kr.md)에서
+  명시적으로 범위 밖으로 뺐다: 이 batch job의 저장 방식은 파일(NDJSON +
+  JSON)이지 데이터베이스가 아니라서, `db_demo_service.c`의 시뮬레이션-DB
+  gap은 그 저장소의 "Planned next steps"에 별개의, 아직 일정 안 잡힌
+  항목으로 그대로 남는다.
+- **완료**: `order-service`의 공개 `GET /orders`를 호출하는 C용 HTTP
+  클라이언트(libcurl, CMake에 연결) — 이미 `ai-agent-service`가 쓰고
+  있는 같은 계약을, 이제 C에서도 동작한다는 걸 증명.
+- **완료**: Job/Step/Chunk 패턴을 C 관용구로 손수 구현(Reader/Processor/
+  Writer 자리에 함수 포인터를 담은 구조체) —
+  `include/batch.h`/`src/batch.c`(범용 엔진) +
+  `src/services/order_summary_batch_job.c`(실제 job: chunk마다 매출
+  합산, NDJSON 스트리밍, JSON summary + JSON execution report 작성).
+  `config/batch-job.json`이 이걸 구동하고, 이번 Phase의 "batch를 JSON으로
+  관리" 지시와 그대로 맞아떨어진다. 실제 동작 중인 `order-service`를
+  상대로 end-to-end 검증함: 단일 chunk(`chunk_size: 5`, 주문 3개)와
+  다중 chunk(`chunk_size: 2`, 2+1) 둘 다 정확한 매출 합계를 냈고,
+  `scripts/run_batch.sh`가 `batch_runner`의 exit code(성공 0 / 실패 1)를
+  cron/systemd-timer 스케줄링용으로 정확히 전달함. 전체 설계와 자체
+  "Alternatives considered"/"Consequences"는
+  [`sun-moon-c-server`의 ADR-0001](https://github.com/schware/sun-moon-c-server/blob/master/docs/adr/0001-batch-job-design_kr.md)
+  참고.
+- 위 Python `batch-service`와의 직접 비교 메모는 아직 못 썼다 — Python
+  쪽이 먼저 있어야 가능하다.
 
 **왜 Phase 1 바로 다음, Go보다 먼저인가**: C는 이미 아는 영역이다(저위험)
 — 완전히 새 언어(Go)를 다루기 전에 이걸 먼저 배치하면, 자신감이 높은
