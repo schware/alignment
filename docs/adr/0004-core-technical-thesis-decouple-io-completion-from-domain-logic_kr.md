@@ -64,7 +64,7 @@ ROADMAP: Go, Rust, TypeScript, JavaScript)를 관통하는 하나의 실로 의�
 ## Consequences
 
 - Phase 2(`sun-moon-python-platform`의 Go gateway/transport 컴포넌트)가
-  "폴리글랏 증명"보다 더 날카로운 근거를 갖게 된다 — 실제로 겪은 구체적인
+  "Polyglot 증명"보다 더 날카로운 근거를 갖게 된다 — 실제로 겪은 구체적인
   전문적 좌절에 대한 의도적이고 직접적인 반박이 되고, 이건 인터뷰에서
   뻔한 "저도 Go 할 줄 알아요"보다 훨씬 기억에 남는 이야기로 읽힌다.
 - 그 Go 컴포넌트 자체의 ADR(Phase 2 시작할 때 `sun-moon-python-platform`에
