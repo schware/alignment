@@ -148,7 +148,14 @@ extends to service decomposition itself, not just one design pattern.
 - No code changes yet — this phase starts next session (owner's own
   scheduling note: "내일 토큰이 초기화되면").
 
-## Phase 2 — one Go component (target: ~4 weeks, through mid-December)
+## Phase 2 — one Go component — revisit next session (per ADR-0008)
+
+Not paused indefinitely — scheduled for next session (tomorrow), same as
+Phase 1.6. The owner wants to reorganize their own thinking on
+Go/TypeScript/Rust first; everything below is today's content, kept as a
+starting point for that next session, not a settled plan.
+
+**Content as of today (2026-09-06), to be revisited next session:**
 
 Goal: prove polyglot Platform capability with **one** well-built Go piece,
 not three half-built ones — and, per ADR-0004, deliberately use it to
@@ -191,13 +198,44 @@ real, operable system — this is where the DevOps/SRE signal mostly comes from.
 - A live deployment somewhere free/cheap (Fly.io, Render, a small VPS) —
   a working URL beats a thousand words in an interview.
 
-## Phase 4 — optional / stretch (only if time remains)
+## Phase 4 — optional / stretch — revisit next session (per ADR-0008)
+
+Same as Phase 2: not paused indefinitely, just revisited next session
+alongside the reorganized Go/TypeScript/Rust plan (TypeScript specifically
+is this phase's language).
 
 - A minimal TypeScript Dashboard hitting `/health` and recent
   orders/agent notes. Explicitly the lowest-priority component — fine to
   defer past the Q4 target, or past the transition window entirely,
   without treating it as a failure. Not every box in the original Platform
   diagram needs to be checked before this is a legitimate, presentable portfolio.
+
+## Proposed (unscheduled) — Java: complete the three-way Batch comparison
+
+Per [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp.md), **not yet
+confirmed** — proposed by Claude, awaiting the owner's go-ahead before
+this gets a target date.
+
+- Build the same Job/Step/Chunk design a third time in actual Java/Spring
+  Boot (likely real Spring Batch, not hand-rolled — Java already has the
+  canonical framework). Python's `batch-service` and C's `batch_runner`
+  already exist.
+- Java would be the **reference implementation**, not a peer demo — the
+  "known-good" baseline the other two get checked against, since Spring
+  Batch is where the owner has 8 real production years (ADR-0005). This
+  is the most direct way to make the portfolio *show* that expertise.
+
+## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
+
+Also per ADR-0008, **not yet confirmed**.
+
+- ADR-0004 named C++20 coroutines (`co_await` + Boost.Asio/cppcoro) as the
+  same-language fix to the original department-store system's
+  completion-callback fragmentation — distinct from `sun-moon-c-server`'s
+  plain-C `batch_runner` (no coroutines, no classes).
+- A small, scoped demo: linear-looking async code over the same IOCP
+  mechanism, with clean object decomposition — a sharper "here's the
+  actual fix, in the actual language" artifact than the Go CSP analogy alone.
 
 ## Explicit scope-cutting rule
 
@@ -216,6 +254,13 @@ skill with no prior exposure at all. If forced to choose, Phase 1.5 wins.
   transition" or "keep building immediately after it" (ADR-0002 flagged
   this as open) — now more pressing, since Phase 1.5 already pushes Phase
   3 past the original Q4 target (see that phase's note above).
+- Go/TypeScript/Rust's reorganized shape (Phase 2/4, revisit next
+  session) — the owner is rethinking this themselves before the next
+  conversation; do not assume today's Phase 2/4 content is still current
+  without checking.
+- Whether the Java and C++ proposals above get confirmed, and if so, how
+  they sequence against Phase 1.6 and the reorganized Go/TS/Rust plan —
+  all scheduled for next session's discussion.
 
 ## Already decided (for the record)
 
