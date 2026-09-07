@@ -8,11 +8,16 @@ change as each phase completes and priorities shift. When a phase's scope
 changes materially, write an ADR about *why* rather than silently editing
 this file's history away.
 
-**Baseline this is built on**: ADR-0002/ADR-0005 (16 years total — MFC
-years 1-4, C++ server years 5-8, C# POS Client years 5-16, Java/Spring
-Boot REST+Batch years 9-16 — no cloud-native/AI/ML experience built yet,
-~3.5 months from 2026-09 to a Q4 2026 target, market-agnostic, no existing
-portfolio). **Strategy this follows**: ADR-0003 (one Platform, deliberately
+**Baseline this is built on**: ADR-0002/ADR-0005 (16 years total)
+
+- MFC years 1-4
+- C++ server years 5-8
+- C# POS Client years 5-16
+- Java/Spring Boot REST+Batch years 9-16
+- no cloud-native/AI/ML experience built yet
+- ~3.5 months from 2026-09 to a Q4 2026 target, market-agnostic, no existing portfolio
+
+**Strategy this follows**: ADR-0003 (one Platform, deliberately
 spanning Backend/Platform, AI/ML, and DevOps/SRE signal), extended by
 ADR-0004 (a technical throughline across every new language) and ADR-0006
 (Batch built twice, in C and Python, against a shared contract).
