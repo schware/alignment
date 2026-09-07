@@ -38,7 +38,10 @@ Technical repositories this direction currently points to:
 - [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
 - [`sun-moon-c-server`](https://github.com/schware/sun-moon-c-server)
 
-Other parallel tracks (e.g. the mobile app) are tracked in `ROADMAP.md`.
+Other parallel tracks (e.g. the mobile app, and the ongoing
+[`sun-moon-java-platform`](https://github.com/schware/sun-moon-java-platform)
+modernization — maintaining the pre-existing Java/Spring Boot baseline
+rather than building new portfolio evidence) are tracked in `ROADMAP.md`.
 
 ## Structure
 

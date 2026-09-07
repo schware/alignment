@@ -27,7 +27,10 @@
 - [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
 - [`sun-moon-c-server`](https://github.com/schware/sun-moon-c-server)
 
-그 외 병렬 트랙(모바일 앱 등)은 `ROADMAP_kr.md` 참고.
+그 외 병렬 트랙(모바일 앱, 그리고 진행 중인
+[`sun-moon-java-platform`](https://github.com/schware/sun-moon-java-platform)
+현대화 — 새 포트폴리오 근거를 만드는 게 아니라 기존 Java/Spring Boot
+baseline을 유지하는 작업)은 `ROADMAP_kr.md` 참고.
 
 ## 구조
 
