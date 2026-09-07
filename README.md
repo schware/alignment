@@ -14,26 +14,33 @@ Preparing for a career transition surfaces two broad kinds of decisions:
 - **Technical**: what to build, which technologies and languages to use.
 - **Career**: which skills to prioritize, which roles to target, how to invest time.
 
-Technical decisions get recorded as ADRs in the technical repository; this
+Technical decisions get recorded as ADRs in each technical repository; this
 repository exists to record career decisions and the reasoning behind them.
 
 In the end, this repository is where the technical-growth and
 career-growth processes are organized and tracked together.
 
-## Relationship to the technical repository
+## Relationship to the technical repositories
 
-The technical repository is the *system* — code, tests, and the technical
-decisions around them, managed as ADRs.
-This repository is the *direction behind building that system* — why that
+Each technical repository is a *system* — code, tests, and the technical
+decisions around them, managed as its own ADRs.
+This repository is the *direction behind building those systems* — why each
 system was chosen, why these particular technologies are being learned, why
 this role is the target at this point in time.
 
-The two are kept separate because they serve different purposes: the
-technical repository explains the engineering output, and this one explains
-the career strategy and the direction behind it.
+The two kinds of repositories are kept separate because they serve different
+purposes: the technical repositories explain the engineering output, and
+this one explains the career strategy and the direction behind it.
 
 Whenever a single decision affects both technology and career, the ADRs on
 each side cross-reference each other.
+
+Technical repositories this direction currently points to:
+
+- [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
+- [`sun-moon-c-server`](https://github.com/schware/sun-moon-c-server)
+
+Other parallel tracks (e.g. the mobile app) are tracked in `ROADMAP.md`.
 
 ## Structure
 
