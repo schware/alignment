@@ -2,31 +2,38 @@
 
 # Alignment — a career-transition preparation log
 
-This repository is not a codebase. It records the reasoning behind a
-career transition, the same way [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
-records the reasoning behind a system's architecture — as dated ADRs
-(Architecture Decision Records) instead of a single running notes document.
+This repository isn't just a set of study notes — it records the decisions
+made during career-transition preparation and the reasoning behind them, the
+same way [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
+records architecture decisions, as ADRs (Architecture Decision Records).
 
-## Why this exists
+## Why keep this
 
-The owner is preparing for a career transition and is building
-`sun-moon-python-platform` (a Platform project) as the primary vehicle for
-that transition. Two kinds of decisions happen along the way: technical
-ones (what to build, which language for which piece) and career ones
-(which skills to prioritize, which roles to target, how much time goes
-where). The technical decisions already get ADRs in that repository; this
-repository does the same for the career decisions, and cross-references
-the technical ones where they're entangled.
+Preparing for a career transition surfaces two broad kinds of decisions:
 
-## Relationship to `sun-moon-python-platform`
+Technical: what to build, which technologies and languages to use.
+Career: which skills to prioritize, which roles to target, how to invest time.
 
-- That repo is the *system* — code, tests, its own ADRs about architecture.
-- This repo is the *person building it* — why that system, why these
-  components, why this timeline, why these target roles.
-- They're kept separate (not merged) so the technical repo stays legible
-  as pure engineering work, and this one stays legible as career strategy
-  — but ADRs on either side cross-reference the other when a decision
-  spans both (see ADR-0003 here, and ADR-0009 there).
+Technical decisions get recorded as ADRs in the technical repository; this
+repository exists to record career decisions and the reasoning behind them.
+
+In the end, this repository is where the technical-growth and
+career-growth processes are organized and tracked together.
+
+## Relationship to the technical repository
+
+The technical repository is the *system* — code, tests, and the technical
+decisions around them, managed as ADRs.
+This repository is the *direction behind building that system* — why that
+system was chosen, why these particular technologies are being learned, why
+this role is the target at this point in time.
+
+The two are kept separate because they serve different purposes: the
+technical repository explains the engineering output, and this one explains
+the career strategy and the direction behind it.
+
+Whenever a single decision affects both technology and career, the ADRs on
+each side cross-reference each other.
 
 ## Structure
 
@@ -41,7 +48,10 @@ strategy built on it), then `ROADMAP.md` for the concrete plan.
 
 ## A note on what's in here
 
-This repo intentionally contains personal, time-sensitive information
-(current-skill honesty, a target timeline for a career transition). Its GitHub
-visibility should be a deliberate choice, not a default — see
+This repo may contain personal, time-sensitive information — an honest
+assessment of current skills, learning plans, a target timeline for a
+career transition, and similar.
+
+Its GitHub visibility should therefore be a deliberate choice rather than
+whatever the default happens to be; that decision is tracked in
 `ROADMAP.md`'s "Not yet decided" section.
