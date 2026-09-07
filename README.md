@@ -11,8 +11,8 @@ records architecture decisions, as ADRs (Architecture Decision Records).
 
 Preparing for a career transition surfaces two broad kinds of decisions:
 
-Technical: what to build, which technologies and languages to use.
-Career: which skills to prioritize, which roles to target, how to invest time.
+- **Technical**: what to build, which technologies and languages to use.
+- **Career**: which skills to prioritize, which roles to target, how to invest time.
 
 Technical decisions get recorded as ADRs in the technical repository; this
 repository exists to record career decisions and the reasoning behind them.
