@@ -2,20 +2,22 @@
 
 # Roadmap — 초안, additive하게 계속 고쳐감
 
-이건 확정된 약속이 아니라 첫 초안이다. 이 프로젝트의 작업 방식(한 조각을
-만들고, 돌아보고, 그 위에 더한다 — `sun-moon-python-platform`이 이걸
-참조하는 ADR 참고)대로, 각 Phase가 끝나고 우선순위가 바뀌면 이 문서도
-바뀔 것으로 예상한다. Phase의 범위가 실질적으로 바뀌면, 이 파일의 이력을
-조용히 지우는 대신 **왜** 바뀌었는지 ADR을 쓴다.
+이건 확정된 내용이 아니라 첫 초안이다. 
+이 프로젝트의 작업 방식(한 조각을만들고, 돌아보고, 그 위에 더한다)대로
+, 각 Phase가 끝나고 우선순위가 바뀌면 이 문서도 바뀔 것으로 예상한다. 
+Phase의 범위가 실질적으로 바뀌면, 이 파일의 이력을 조용히 지우는 대신 **왜** 바뀌었는지 ADR을 쓴다.
 
-**이 로드맵이 딛고 선 baseline**: ADR-0002/ADR-0005 (총 16년 — MFC
-1~4년차, C++ Server 5~8년차, C# POS Client 5~16년차, Java/Spring Boot
-REST+Batch 9~16년차 — 아직 cloud-native/AI-ML 경험 없음, 2026-09-06부터
-Q4 2026 타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음). **따르는
-전략**: ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에
+**이 로드맵이 딛고 선 baseline**: ADR-0002/ADR-0005 
+(총 16년 — MFC 1~4년차, 
+          C++ Server 5~8년차,            
+          Java/Spring Boot REST+Batch 9~16년차
+          C# POS Client 5~16년차, 
+          아직 cloud-native/AI-ML 만들어 보지 못함,
+          2026-09월 부터 Q4 2026 타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음). 
+**따르는 전략**: ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에
 의도적으로 걸치는 Platform 하나), 여기에 ADR-0004(새 언어마다 관통하는
-기술적 실 하나)와 ADR-0006(Batch를 C와 Python 둘 다, 공유 계약을 통해
-만듦)이 더해짐.
+기술적 방향 하나) 와 ADR-0006(Batch를 C와 Python 둘 다, Claude을 통해
+만들감)이 더해짐.
 
 ## Phase 0 — 완료 (2026-09-06 기준)
 
