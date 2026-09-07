@@ -4,8 +4,8 @@
 
 This repository isn't just a set of study notes — it records the decisions
 made during career-transition preparation and the reasoning behind them, the
-same way [`sun-moon-python-platform`](https://github.com/schware/sun-moon-python-platform)
-records architecture decisions, as ADRs (Architecture Decision Records).
+same way system architecture decisions get recorded, as ADRs (Architecture
+Decision Records).
 
 ## Why keep this
 
