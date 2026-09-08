@@ -1,20 +1,24 @@
 *🇬🇧 English version: [ROADMAP.md](ROADMAP.md)*
 
-# Roadmap — 초안, additive하게 계속 고쳐감
+# Roadmap — 살아있는 문서(Living Document)
 
-이건 확정된 약속이 아니라 첫 초안이다. 이 프로젝트의 작업 방식(한 조각을
-만들고, 돌아보고, 그 위에 더한다 — `sun-moon-python-platform`이 이걸
-참조하는 ADR 참고)대로, 각 Phase가 끝나고 우선순위가 바뀌면 이 문서도
-바뀔 것으로 예상한다. Phase의 범위가 실질적으로 바뀌면, 이 파일의 이력을
-조용히 지우는 대신 **왜** 바뀌었는지 ADR을 쓴다.
+이 문서는 확정된 계획이 아니라 현재 시점의 초안이다.
+이 프로젝트의 작업 방식(한 조각을 만들고, 돌아보고, 그 위에 더한다)대로,
+각 Phase가 끝나고 우선순위가 바뀌면 이 문서도 바뀔 것으로 예상한다.
+Phase의 범위가 실질적으로 바뀌면, 이 파일의 이력을 조용히 지우는 대신 **왜** 바뀌었는지 ADR을 쓴다.
 
-**이 로드맵이 딛고 선 baseline**: ADR-0002/ADR-0005 (총 16년 — MFC
-1~4년차, C++ Server 5~8년차, C# POS Client 5~16년차, Java/Spring Boot
-REST+Batch 9~16년차 — 아직 cloud-native/AI-ML 경험 없음, 2026-09-06부터
-Q4 2026 타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음). **따르는
-전략**: ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에
+**이 로드맵이 딛고 선 baseline**: ADR-0002/ADR-0005 (총 16년)
+
+- MFC 1~4년차
+- C++ Server 5~8년차
+- C# POS Client 5~16년차
+- Java/Spring Boot REST+Batch 9~16년차
+- 아직 cloud-native/AI-ML 만들어 보지 못함
+- 2026-09월부터 Q4 2026 타겟까지 약 3.5개월, 시장 무관, 기존 포트폴리오 없음
+
+**따르는 전략**: ADR-0003 (Backend/Platform, AI/ML, DevOps/SRE 세 시그널 전부에
 의도적으로 걸치는 Platform 하나), 여기에 ADR-0004(새 언어마다 관통하는
-기술적 실 하나)와 ADR-0006(Batch를 C와 Python 둘 다, 공유 계약을 통해
+기술적 방향 하나)와 ADR-0006(Batch를 C와 Python 둘 다, 공유 계약을 통해
 만듦)이 더해짐.
 
 ## Phase 0 — 완료 (2026-09-06 기준)
@@ -225,6 +229,42 @@ Phase 2와 마찬가지로 무기한 정지가 아니다 — 재정리된 Go/Typ
   조용히 Q4 타임라인을 갉아먹게 두지 말고 그 드리프트 자체에 대한 별도
   ADR을 써야 한다(ADR-0011의 Consequences 참고).
 
+## 활동 로그 (이 로드맵의 Phase 밖) — `sun-moon-java-platform` 현대화
+
+Phase가 아니고, ADR-0003 의미의 새로운 포트폴리오 구축 작업도 아니다 —
+여기서의 가치는 새 스킬 습득이 아니라 이미 있던 Java/Spring Boot
+전문성(ADR-0005의 9~16년차 baseline)을 유지·현대화한 것이다. Mobile App
+트랙과 같은 이유로, 존재를 눈에 보이게 하기 위해서만 여기 적어둔다.
+
+- **무엇, 2026-09-08**: `sun-moon-java-platform`을 하나의 WAR + 공용
+  Jetty 배포에서, Order/KDS/Delivery 3개의 독립 Spring Boot 서비스로
+  분리했다 — 각각 별도 GitHub 저장소로 나뉘고 git submodule umbrella로
+  묶여 있으며, 각자 자기만의 Docker 컨테이너와 자기만의
+  `context-path`(`/order`, `/kds`, `/delivery`)를 갖는다. 서버의
+  2010년형 CPU가 MongoDB가 요구하는 AVX 명령어를 지원하지 않는다는 걸
+  발견한 뒤 Order/Delivery는 PostgreSQL+JSONB로, KDS는 Redis로 갔다.
+  WAR/Jetty 시절 남아있던 경로 redaction 버그(health/metrics 엔드포인트가
+  옛 redaction 마커와 안 맞는 Docker 컨테이너 경로를 그대로 노출하던
+  것)를 고쳤고, 각 서비스의 OpenAPI `servers` URL도 새 context-path와
+  맞춰뒀다.
+- **왜 그래도 기록해두는가**: `-jetty` 접미사가 붙은 저장소들과
+  `sun-moon-java-platform`의 `docs/adr`(0001~0006) 기록은 ADR-0005의
+  Java/Spring Batch baseline이 정체돼 있지 않고 실제로 계속 관리되고
+  있다는 독립적인 근거가 된다 — Q4 포트폴리오 구축 순서에는 안 들어가도
+  이 저장소에서 보일 가치는 있다.
+- 이 작업은 Phase 1/1.5/1.6/2/3/4의 시간 예산과 경쟁하지 않는다 — 그
+  Phase들과 별개로, 병행해서 진행됐다.
+- **이름 충돌, 명시적으로 짚어둠**: 바로 아래("제안됨... Enterprise
+  Runtime Platform" 섹션)에서 설명하는, *처음부터 새로 만드는, Netty
+  기반, Spring 없는* Java 포트폴리오 프로젝트가 이 실제 기존 Spring Boot
+  시스템과 정확히 같은 repo 이름 `sun-moon-java-platform`을 씁니다 —
+  이름도 같고 GitHub repo도 같지만, git 브랜치가 다릅니다: `main`이 이
+  실제 Spring Boot/WAR→microservices 시스템(이 활동 로그 항목)이고,
+  `master`가 아래에서 설명하는 처음부터 새로 만든 Spring-없는
+  재구현입니다. 같은 repo 안에 서로 무관한 두 코드베이스가 브랜치로만
+  나뉘어 있는 것 — 이 로드맵을 읽을 때나, 그 repo 자체의 커밋 이력이나
+  `docs/adr/`을 읽을 때 혼동하지 말 것(브랜치마다 ADR 번호 체계도 독립적임).
+
 ## 제안됨 (아직 일정 없음) — Java: DDD 기반 Enterprise Runtime Platform
 
 [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp_kr.md)과
@@ -302,3 +342,10 @@ Dashboard)가 통째로 잘릴 가능성을 낮추는 게 아니라 오히려 �
   Public이다, 의도적으로 — 여기 담긴 개인적/타임라인 내용까지 포함해서.
   본인의 현재 회사 대표도 이미 알고 있는 상황이고, 공개 상태 자체를
   결심을 다지는 장치로 의도적으로 쓰고 있다.
+- GitHub 공개 범위, 2026-09-08 확대: `sun-moon-java-platform` 계열
+  (Order/KDS/Delivery, 그리고 archived된 이전 `-jetty` 저장소들)과
+  `sun-moon-app`도 같은 이유로 이제 Public이다 — 기본값이 아니라
+  의도적으로. archived 저장소는 unarchive → public 전환 → 다시 archive
+  순서로 처리했다(GitHub API가 archived 저장소의 공개 범위 변경 자체를
+  거부하기 때문). `Debian-Setting`은 홈 서버의 실제 설정을 담고 있어서
+  Private으로 남겨뒀다.

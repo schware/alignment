@@ -17,26 +17,62 @@ learned while building) makes this decision necessary right now?
 
 ## Decision
 
-What was actually decided. One or two paragraphs, stated plainly.
+What was decided. State it plainly, in an actionable form where possible.
 
 ## Alternatives considered
 
-- **Alternative A** — what it is, why it wasn't chosen
-- **Alternative B** — what it is, why it wasn't chosen
+Record the alternatives that were considered but not adopted, and why.
+
+- Alternative A
+  - What it is
+  - Why it wasn't chosen
+- Alternative B
+  - What it is
+  - Why it wasn't chosen
 
 ## Consequences
 
+Record the effects and costs that follow from this decision.
+
+### Upside
+
 - What this makes easier
-- What this costs (time, a skill not being learned yet, an opportunity not taken)
-- What becomes harder to change later because of this decision
+- What goal this gets to faster
+
+### Costs and constraints
+
+- Time and effort required
+- Other skills this crowds out
+- Opportunities this forgoes
+
+### Future impact
+
+- What becomes harder to change later
+- What a future ADR should revisit
 
 ## References
 
-- Sources this leaned on (job postings reviewed, articles, a specific
-  conversation/turning point, a technical ADR in `sun-moon-python-platform`)
+Record the sources this decision leaned on.
+
+- Job postings
+- Technical documentation
+- Blog posts or papers
+- A conversation with a mentor
+- Interview experience
+- Related ADRs
 
 ---
 
-**To revise this ADR**: write a new one with a new number and "Supersedes
-ADR-NNNN," rather than editing this file — keeping the trail intact is the
-whole point of doing this as ADRs instead of a single running notes file.
+### Rule for revising an ADR
+
+Don't edit an existing ADR's content directly.
+
+When a decision changes or a new judgment is added, write a new ADR and
+state one of the following:
+
+- Supersedes ADR-NNNN
+- Revisits ADR-NNNN
+- Amends ADR-NNNN
+
+Keeping both the past judgment and the current one is the whole point of
+using ADRs.

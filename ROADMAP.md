@@ -1,19 +1,23 @@
 *🇰🇷 Korean version: [ROADMAP_kr.md](ROADMAP_kr.md)*
 
-# Roadmap — draft, revised additively
+# Roadmap — a living document
 
-This is a first draft, not a commitment set in stone. Per this project's
-working style (build a piece, reflect, add to it — see
-`sun-moon-python-platform`'s ADR referencing this), expect this document to
-change as phases complete and priorities shift. When a phase's scope
+This document is a draft as of now, not a fixed plan. Per this project's
+working style (build a piece, reflect, add to it), expect this document to
+change as each phase completes and priorities shift. When a phase's scope
 changes materially, write an ADR about *why* rather than silently editing
 this file's history away.
 
-**Baseline this is built on**: ADR-0002/ADR-0005 (16 years total — MFC
-years 1-4, C++ server years 5-8, C# POS Client years 5-16, Java/Spring
-Boot REST+Batch years 9-16 — no cloud-native/AI/ML experience yet, ~3.5
-months from 2026-09-06 to a Q4 2026 target, market-agnostic, no existing
-portfolio). **Strategy this follows**: ADR-0003 (one Platform, deliberately
+**Baseline this is built on**: ADR-0002/ADR-0005 (16 years total)
+
+- MFC years 1-4
+- C++ server years 5-8
+- C# POS Client years 5-16
+- Java/Spring Boot REST+Batch years 9-16
+- no cloud-native/AI/ML experience built yet
+- ~3.5 months from 2026-09 to a Q4 2026 target, market-agnostic, no existing portfolio
+
+**Strategy this follows**: ADR-0003 (one Platform, deliberately
 spanning Backend/Platform, AI/ML, and DevOps/SRE signal), extended by
 ADR-0004 (a technical throughline across every new language) and ADR-0006
 (Batch built twice, in C and Python, against a shared contract).
@@ -232,6 +236,15 @@ sequencing and scope-cutting rules, so it never competes with Phase
   that drift needs its own ADR (see ADR-0011's Consequences) rather than
   silently eating into the Q4 timeline.
 
+## Activity log (outside this roadmap's Phases) — `sun-moon-java-platform` modernization
+
+Not a Phase, and not itself new portfolio-building work in the ADR-0003 sense — the value here is *maintaining and modernizing* the pre-existing Java/Spring Boot expertise (the years 9-16 baseline in ADR-0005), not acquiring a new skill this roadmap tracks. Recorded so it's visible, the same way the Mobile App track is.
+
+- **What, 2026-09-08**: converted `sun-moon-java-platform` from a single WAR deployed on shared Jetty into three independently deployed Spring Boot services (Order/KDS/Delivery) split across separate GitHub repos joined by a git-submodule umbrella, each running in its own Docker container with its own `context-path` (`/order`, `/kds`, `/delivery`). Order and Delivery moved to PostgreSQL+JSONB after discovering the server's 2010-era CPU lacks the AVX instructions MongoDB requires; KDS uses Redis. Fixed a stale path-redaction bug left over from the WAR/Jetty era (health/metrics endpoints were leaking the raw Docker container path since the old redaction marker no longer matched), and kept the OpenAPI `servers` URL in each service in sync with its new context-path.
+- **Why it's recorded at all**: the resulting `-jetty`-suffixed repos and the `docs/adr` records in `sun-moon-java-platform` (0001-0006) are independently defensible evidence of the ADR-0005 Java/Spring Batch baseline being actively maintained, not stale — worth being visible from this repo even though it isn't part of the Q4 portfolio-building sequence.
+- This work doesn't compete with Phase 1/1.5/1.6/2/3/4 for time budget — it happened alongside them, not instead of them.
+- **Naming collision, worth flagging explicitly**: the *from-scratch, Netty-based, no-Spring* Java portfolio project described just below (the "Proposed... Enterprise Runtime Platform" section) happens to share the exact repo name `sun-moon-java-platform` with this real, pre-existing Spring Boot system — same name, same GitHub repo even, but different git branches: `main` is this real Spring Boot/WAR-turned-microservices system (this activity-log entry); `master` is the from-scratch, no-Spring rebuild described below. They are two unrelated codebases living in the same repo under different branches — don't conflate them when reading this roadmap, that repo's own commit history, or its `docs/adr/` (each branch has its own independent ADR numbering).
+
 ## Proposed (unscheduled) — Java: a DDD-based Enterprise Runtime Platform
 
 Per [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp.md),
@@ -404,3 +417,10 @@ skill with no prior exposure at all. If forced to choose, Phase 1.5 wins.
   Public, deliberately, including the personal/timeline content here — the
   owner's own current employer is already aware, and public visibility is
   intentionally being used as a commitment device.
+- GitHub visibility, extended 2026-09-08: the `sun-moon-java-platform`
+  family (Order/KDS/Delivery, plus the archived `-jetty` predecessors) and
+  `sun-moon-app` are now also Public, for the same reason — deliberately,
+  not by default. Archived repos were unarchived, made public, then
+  re-archived (GitHub's API refuses a visibility change on an archived
+  repo). `Debian-Setting` stays Private (it documents the home server's
+  actual configuration).
