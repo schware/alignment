@@ -225,20 +225,38 @@ Phase 2와 마찬가지로 무기한 정지가 아니다 — 재정리된 Go/Typ
   조용히 Q4 타임라인을 갉아먹게 두지 말고 그 드리프트 자체에 대한 별도
   ADR을 써야 한다(ADR-0011의 Consequences 참고).
 
-## 제안됨 (아직 일정 없음) — Java: 3자 Batch 비교 완성
+## 제안됨 (아직 일정 없음) — Java: DDD 기반 Enterprise Runtime Platform
 
-[ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp_kr.md)에 따라,
-**아직 확정 안 됨** — Claude가 제안했고, 목표 일정이 붙기 전에 본인의
-승인이 필요하다.
+[ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp_kr.md)과
+[ADR-0009](docs/adr/0009-java-enterprise-runtime-platform-scope-expansion_kr.md)에
+따라, **아직 확정 안 됨** — 아래 내용은 Ongoing 방향성 설정이지 확정된
+범위가 아니다. ADR-0008은 원래 Java를 Batch 전용 reference
+implementation으로만 제안했다; ADR-0009는 본인이 2026-09-06에 이걸 단일
+Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데모보다는
+`sun-moon-c-server`의 야심(하나의 Runtime, 여러 Transport)에 구조적으로
+더 가깝다.
 
-- 같은 Job/Step/Chunk 설계를 세 번째로 실제 Java/Spring Boot로 만든다
-  (손수 만든 엔진이 아니라 아마 진짜 Spring Batch로 — Java는 이미 정석
-  프레임워크를 갖고 있다). Python의 `batch-service`와 C의 `batch_runner`는
-  이미 존재한다.
-- Java는 동등한 데모가 아니라 **reference implementation**이 될 것이다
-  — 나머지 둘을 검증하는 "정답" 기준선, Spring Batch가 본인이 8년의
-  실전 경험을 가진 분야이기 때문에(ADR-0005). 그 전문성을 글로만
-  주장하는 대신 포트폴리오가 실제로 보여주게 만드는 가장 직접적인 방법.
+- **형태**: Socket, REST API, WebSocket, Batch Job을 함께 호스팅하는 단일
+  Java Runtime, DDD 구조, OpenSource 우선, 동시 접속자 1,000~10,000명
+  목표.
+- **후보 스택 (본인 제안, 2026-09-06)**: Netty(Core Runtime / Transport),
+  Quartz(Batch Scheduler), MyBatis + Oracle(Persistence), Redis(Cache/
+  Session/Lock), Kafka(Event Bus), Logback(Logging), Micrometer/
+  Prometheus/Grafana(Monitoring), OpenTelemetry(Tracing).
+- **Claude의 추가 제안 (ADR-0009)**: Spring Core DI + 실제 Spring Batch
+  (Quartz는 이걸 대체하지 않고 트리거만 함 — ADR-0008의 원래 "정답
+  기준선" 요점과 다시 연결); REST/WS 라우팅을 Netty의 event loop 위에
+  올리기 위한 Reactor Netty/Spring WebFlux; HikariCP; Jackson; Jakarta
+  Bean Validation; Resilience4j; Redisson; Flyway; JUnit5 + Mockito +
+  Testcontainers.
+- Java는 이 Platform 안에서도 Job/Step/Chunk 비교의
+  **reference implementation** 역할은 그대로 유지한다 — Python/C Batch
+  작업이 검증받는 "정답" 기준선, Spring Batch가 본인이 8년의 실전 경험을
+  가진 분야이기 때문(ADR-0005) — 다만 이제 그 비교는 전체 범위가 아니라
+  더 큰 Runtime의 한 조각이다.
+- **아직 결정 안 됨** (ADR-0009 참고): DI/라우팅 아키텍처, build tool,
+  repo 이름(후보: `sun-moon-java-platform`), Phase 1.6 및 재정리된
+  Go/TS/Rust 계획과의 순서.
 
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 
@@ -274,6 +292,9 @@ Dashboard)가 통째로 잘릴 가능성을 낮추는 게 아니라 오히려 �
   Phase 2/4 내용을 여전히 유효한 것으로 가정하지 말 것.
 - 위 Java/C++ 제안이 확정될지, 확정된다면 Phase 1.6 및 재정리된
   Go/TS/Rust 계획과 어떤 순서로 갈지 — 전부 다음 세션 논의 주제다.
+- ADR-0009에 따른 Java의 Platform 아키텍처: DI/라우팅 방식, build tool,
+  repo 이름, 그리고 (ADR-0008의 원래 Batch 전용 범위 대비) 전체 Platform
+  범위가 실제로 만들어질 것인지.
 
 ## 이미 정한 것 (기록용)
 

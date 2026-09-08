@@ -232,20 +232,128 @@ sequencing and scope-cutting rules, so it never competes with Phase
   that drift needs its own ADR (see ADR-0011's Consequences) rather than
   silently eating into the Q4 timeline.
 
-## Proposed (unscheduled) — Java: complete the three-way Batch comparison
+## Proposed (unscheduled) — Java: a DDD-based Enterprise Runtime Platform
 
-Per [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp.md), **not yet
-confirmed** — proposed by Claude, awaiting the owner's go-ahead before
-this gets a target date.
+Per [ADR-0008](docs/adr/0008-pause-go-ts-rust-add-java-cpp.md),
+[ADR-0009](docs/adr/0009-java-enterprise-runtime-platform-scope-expansion.md),
+and [ADR-0010](docs/adr/0010-java-drop-spring.md), **not yet fully
+confirmed** — the shape below is Ongoing direction-setting, not a
+scheduled scope. ADR-0008 originally proposed Java only as a Batch-only
+reference implementation; ADR-0009 records that the owner expanded this on
+2026-09-06 into a full single-runtime Platform, structurally closer to
+`sun-moon-c-server`'s ambition (one runtime, multiple transports) than to
+a third Batch demo; ADR-0010 (same day) records the owner rejecting
+ADR-0009's Spring addition, keeping the stack Spring-free.
 
-- Build the same Job/Step/Chunk design a third time in actual Java/Spring
-  Boot (likely real Spring Batch, not hand-rolled — Java already has the
-  canonical framework). Python's `batch-service` and C's `batch_runner`
-  already exist.
-- Java would be the **reference implementation**, not a peer demo — the
-  "known-good" baseline the other two get checked against, since Spring
-  Batch is where the owner has 8 real production years (ADR-0005). This
-  is the most direct way to make the portfolio *show* that expertise.
+- **Shape**: one Java runtime hosting Socket, REST API, WebSocket, and
+  Batch Job together, DDD-structured, open-source-first, targeting
+  1,000-10,000 concurrent connections.
+- **Confirmed stack (owner, 2026-09-06, no Spring per ADR-0010)**: Netty
+  (Core Runtime / Transport, including raw REST/WS routing on Netty's own
+  channel pipelines — no Reactor Netty/WebFlux), Quartz (Batch Scheduler —
+  triggers a hand-rolled Job/Step/Chunk engine, doesn't use Spring Batch),
+  MyBatis + Oracle (Persistence), Redis (Cache/Session/Lock), Kafka (Event
+  Bus), Logback (Logging), Micrometer/Prometheus/Grafana (Monitoring),
+  OpenTelemetry (Tracing).
+- **Also suggested, Spring-independent (ADR-0009, unaffected by the
+  Spring drop)**: HikariCP; Jackson; Jakarta Bean Validation (Hibernate
+  Validator); Resilience4j; Redisson; Flyway; JUnit5 + Mockito +
+  Testcontainers.
+- Java is still the highest-real-production-experience implementation in
+  the Job/Step/Chunk comparison (8 years, ADR-0005), but per ADR-0010 this
+  is no longer "the one using the canonical framework" — the Job/Step/
+  Chunk/Reader/Processor/Writer model is now hand-rolled in Java idiom,
+  structurally closer to C's hand-rolled `batch_runner` than to
+  framework-backed Spring Batch.
+- **Design note (2026-09-06)**: Netty covers Socket + REST API + WebSocket
+  natively (`HttpServerCodec`/`HttpObjectAggregator` for REST,
+  `WebSocketServerProtocolHandler` for WS, a hand-written
+  `ByteToMessageDecoder`/`MessageToByteEncoder` pair for raw Socket, all on
+  the same `ChannelPipeline` mechanism) and comfortably clears the
+  1,000-10,000 concurrent-connection target — this is judged feasible, and
+  structurally the same proof `sun-moon-c-server` already gave in C via
+  libuv. The one thing that needs deliberate design, precisely because
+  Spring isn't there to paper over it: Netty's event-loop threads must
+  never block, but MyBatis + Oracle (JDBC) calls are blocking by nature —
+  so domain-service calls that hit Oracle need to be handed off to a
+  separate worker thread pool and the result bridged back onto the Netty
+  channel, rather than called inline on an I/O thread.
+- **Started, 2026-09-06**: `sun-moon-java-platform` scaffolded at
+  `D:\Claude_Code\Network\Java` — Gradle 8.11 (Kotlin DSL, wrapper
+  committed) + JDK 21, both freshly installed for this (neither was
+  present before). First slice built and verified end-to-end: one Netty
+  `ServerBootstrap` (`CoreRuntime`) serving `GET /health` via a small
+  hand-written REST router, returning `{"status":"UP"}`, then a clean
+  shutdown. Everything else in the stack above is still unimplemented —
+  see that repo's own `docs/adr/0002` for the full plan and what's left.
+  Build tool (Gradle) and repo name (`sun-moon-java-platform`) are
+  therefore now decided as a side effect of starting; DI-replacement
+  approach and sequencing against Phase 1.6/Go/TS/Rust remain open.
+- **Expanded, same day**: the owner asked to expand every planned piece at
+  once rather than one at a time. Done and **live-verified** (see that
+  repo's `docs/adr/0003`): Socket + WebSocket transports (real socket/WS
+  clients against the real server), the hand-rolled Job/Step/Chunk Batch
+  engine triggered by a real Quartz `Scheduler` (5 seeded orders, revenue
+  310.74, matches the Python/C order-summary job's shape), Micrometer
+  (`GET /metrics` returns real Prometheus scrape text), OpenTelemetry
+  (a real span logged per `/health` call), Jakarta Bean Validation +
+  Resilience4j (exercised live through a new `POST /orders` endpoint — a
+  blank `customerId` really returns `400`). **Not live-verified** — this
+  dev environment has no Docker/Oracle/Redis/Kafka: the real
+  `MyBatisOrderRepository`/`RedissonCacheClient`/`KafkaEventPublisher`
+  adapters were written (hexagonal ports + fakes, same pattern as
+  `sun-moon-python-platform`'s ADR-0008) and compile, but `Bootstrap`
+  wires in their in-memory fakes by default and no test exercises the real
+  ones. A `docker-compose.yml` (Oracle/Redis/Kafka/Prometheus/Grafana) is
+  included for when that infra is actually stood up. Full build (`./gradlew
+  clean build`) and all 11 tests pass.
+- **Not yet decided** (see ADR-0009/0010): what replaces Spring's DI role
+  (manual wiring vs. a lightweight non-Spring DI library), sequencing
+  against Phase 1.6 and the reorganized Go/TS/Rust plan, and when (or
+  whether) Docker gets installed here to actually verify the Oracle/Redis/
+  Kafka adapters live.
+- **Build order revised, 2026-09-08**: the plan was REST API → Client
+  (device) app next; the owner found Client needs BO (Back Office, the
+  internal admin system) to exist first, so BO moves ahead of Client. Two
+  scope clarifications came with it: "Client" in this project means a
+  connected device/terminal (echoing the owner's own C# POS Client
+  production background, `Alignment` ADR-0005), not a SaaS tenant; and
+  device connection/handshake handling is explicitly **not** BO's job — a
+  separate, not-yet-designed **Device Server** will own that, so BO's
+  relationship to devices is CRUD-only (master data, not live connection
+  state). BO's minimal scope: operator/admin accounts, Common Code (공통코드)
+  CRUD, Device CRUD — added as new `/bo/*` endpoints in
+  `sun-moon-java-platform` itself, not a separate service. Auth: session-based
+  (`HttpOnly`/`Secure`/`SameSite` cookie), chosen over JWT — an admin
+  panel wants immediate revocation, the Core Runtime is still one process
+  so JWT's statelessness isn't needed yet, and it fits the existing
+  hexagonal ports-+-fakes pattern (`SessionStore` port, `InMemorySessionStore`
+  now, `RedisSessionStore` later). Recorded in that repo's own
+  `docs/adr/0004-bo-endpoints-session-auth.md`.
+- **BO auth built and live-verified, same day**: the 3-tier permission
+  model (전체관리자/super-admin bypass, per-screen, per-screen-per-action —
+  조회/신규/저장/삭제) plus `POST /bo/auth/login`/`logout`, `GET /bo/auth/me`,
+  the `AuthorizedEndpoint` decorator, BCrypt hashing, and startup seeding
+  of the first super admin (`BO_ADMIN_USERNAME`/`PASSWORD`) — all built and
+  driven over real HTTP in a new `BoAuthTest` (5/5 passing, 16/16 total in
+  the repo). Recorded in `docs/adr/0006-bo-auth-built-and-verified.md`.
+  Common Code and Device CRUD screens themselves are still unbuilt — only
+  the auth/permission layer they'll sit behind exists.
+- **Persistence switched from Oracle to PostgreSQL, same day**
+  (`docs/adr/0005`): more deployable on Phase 3's free/cheap targets than
+  Oracle, and installable natively via `winget` unlike Oracle (which needs
+  Docker). PostgreSQL was briefly installed locally to close the
+  "not-live-verified" gap immediately, then reconsidered and uninstalled
+  — it registers as an always-running Windows Service (unlike JDK/Gradle),
+  a footprint that should have been flagged before installing rather than
+  after. Live DB verification is now deliberately deferred to deploy time;
+  local dev continues on in-memory fakes, same discipline as ADR-0003.
+- Both commits pushed to `github.com/schware/sun-moon-java-platform` on
+  its `master` branch — deliberately **not** the repo's default `main`
+  branch, which already holds a different, pre-existing Spring
+  Boot/WAR/Jetty MSA project (order/kds/delivery submodules) unrelated to
+  this Claude-Code-driven rebuild. Worth remembering next session: this
+  repo currently hosts two unrelated codebases on two branches.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
@@ -283,6 +391,12 @@ skill with no prior exposure at all. If forced to choose, Phase 1.5 wins.
 - Whether the Java and C++ proposals above get confirmed, and if so, how
   they sequence against Phase 1.6 and the reorganized Go/TS/Rust plan —
   all scheduled for next session's discussion.
+- Java's Platform architecture per ADR-0009/0010: DI-replacement approach
+  (Spring is dropped, so manual wiring vs. a lightweight non-Spring DI
+  library is still open), and sequencing against Phase 1.6 and the
+  reorganized Go/TS/Rust plan. Build tool (Gradle) and repo name
+  (`sun-moon-java-platform`) are decided — see the Java section above,
+  "Started, 2026-09-06."
 
 ## Already decided (for the record)
 
