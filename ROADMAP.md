@@ -199,8 +199,13 @@ real, operable system — this is where the DevOps/SRE signal mostly comes from.
 - Verify `docker-compose.yml` actually builds and runs (flagged as
   untested in that repo — this environment had no Docker to test with).
 - A real CI pipeline covering the Go component too (lint + build + test).
-- A live deployment somewhere free/cheap (Fly.io, Render, a small VPS) —
-  a working URL beats a thousand words in an interview.
+- A live deployment somewhere free/cheap (~~Fly.io~~, Render, a small VPS) —
+  a working URL beats a thousand words in an interview. **Correction,
+  2026-09-09**: Fly.io's free tier ended October 2024 — new accounts get a
+  short trial, then a paid minimum. Cross this off as a free candidate for
+  any track. See the Java section below for a researched, concrete pick
+  (Render + Neon) that could generalize to Python/Go too when this phase
+  actually starts.
 
 ## Phase 4 — optional / stretch — revisit next session (per ADR-0008)
 
@@ -367,6 +372,18 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   Boot/WAR/Jetty MSA project (order/kds/delivery submodules) unrelated to
   this Claude-Code-driven rebuild. Worth remembering next session: this
   repo currently hosts two unrelated codebases on two branches.
+- **Deployment target picked, 2026-09-09** (`docs/adr/0007`, that repo):
+  **Render** (app, Docker) **+ Neon** (PostgreSQL) — both researched and
+  confirmed genuinely permanently free as of today, not trial credit,
+  per the owner's explicit "전부 지속적인 무료로만" requirement. Fly.io
+  ruled out (dead since Oct 2024); Render's *own* free Postgres ruled out
+  (30-day expiry); Oracle Cloud Always Free noted as a viable, more
+  DevOps-signal-heavy alternative but deferred (self-managed, recently
+  shrunk, idle-reclaim risk) — see Phase 3's correction above. Sequencing:
+  Common Code CRUD → Device CRUD → then the 11-step deployment checklist
+  in ADR-0007 (Dockerfile, Neon setup, Render env vars, switching
+  `Bootstrap` off the in-memory fakes for prod, enabling the `Secure`
+  cookie flag over real HTTPS). Not yet executed — CRUD screens come first.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
