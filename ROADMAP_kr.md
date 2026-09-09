@@ -298,6 +298,46 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   repo 이름(후보: `sun-moon-java-platform`), Phase 1.6 및 재정리된
   Go/TS/Rust 계획과의 순서.
 
+- **같은 주에 다시 내리고, 저장소 셋으로 쪼갬, 2026-09-09** — 위의 port
+  배정(8083/8084/9090)이 틀렸는데, 틀린 방식이 번호가 아니라 구조였다.
+  서버의 체계는 **service 단위**로 배정한다 — 8000 hub, 8080 BO,
+  8081~8089 REST API, 9011/9021/9031이 Java/Python/C의 Socket. container
+  하나가 서로 다른 세 범주의 세 칸을 물고 있으면 번호를 다시 매겨서
+  맞출 수 있는 문제가 아니다. container를 내렸고(ADR-0013), 질문은 "어느
+  port"가 아니라 "container 몇 개"가 됐다.
+- **답: kernel 하나에 service 둘.**
+  [`sun-moon-platform-core`](https://github.com/schware/sun-moon-platform-core)가
+  공용 runtime이다 — Netty listener bind, REST routing, event loop 밖에서
+  실행한다는 계약, MyBatis/Flyway/Micrometer/OTel 결선. `main`도 port도
+  domain도 없는 library다.
+  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo)가
+  Back Office(8080, LAN 전용)이고, `sun-moon-java-platform`의 `master`는
+  장비를 마주하는 쪽을 갖는다. 각 service는 kernel을 git submodule로
+  물고 Gradle composite build로 쓴다 — artifact registry를 안 쓰므로,
+  같은 디스크에 있는 소비자 둘짜리 의존을 위해 publish token을 관리할
+  일이 없다(ADR-0014).
+- **저장소를 만들기 전에 경계가 실제로 성립하는지부터 확인했다.** 남길
+  가치가 있는 건 이 부분이다 — 아래로 새는 곳이 셋 있었다. runtime이
+  socket port를 직접 bind했고, HTTP initializer가 WebSocket echo handler를
+  import했고, MyBatis 설정이 domain mapper 넷을 나열하고 있었다. 셋 다
+  진짜 결합이었고, 셋 다 제자리에서 고쳤고, 그 동안 26개 테스트가 계속
+  통과했다. 그러고 나서야 파일을 옮겼다. BO의 package는
+  `com.sunmoon.bo.*`로 바꿨다 — 의존의 방향이 build 파일의 주장이 아니라
+  모든 import에서 눈에 보이도록.
+- **분리 후 컴파일만이 아니라 실제로 검증했다**: BO를 자기
+  `installDist` 배포본에서 띄워 로그인·session cookie·공통코드 CRUD를
+  왕복시켰고, 세 저장소의 테스트는 3 + 12 + 11 = 26개로 분리 전과 같다.
+  이는 ADR-0002의 "단일 runtime" 전제를 좁힌다 —
+  Socket/REST/WebSocket/Batch를 함께 두는 것은 여전히 이 platform의
+  모양이지만, BO는 workload가 아니라 관리였고 애초에 그 안에 있을
+  것이 아니었다.
+- **기록해 둘 만한 회귀**: 기존 Spring Order service를 8080에서
+  8083으로 옮기면서(8080을 BO 자리로 비우려고) UFW에 8083을 안 열어,
+  컨테이너는 떠 있고 health도 UP이고 `localhost`로는 응답하는데 밖에서만
+  몇 시간 동안 안 닿았다. 증상이 방화벽 문제처럼 보이지 않는다는 것이
+  바로 시간을 잡아먹은 이유다. `Debian-Setting`의 `docs/docker.md`에
+  해법과 나란히 적어뒀다.
+
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 
 역시 ADR-0008에 따라, **아직 확정 안 됨**.

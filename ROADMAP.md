@@ -413,6 +413,47 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   containers is not where that gets tested, and no load test has been run
   anywhere.
 
+- **Undeployed the same week, and split into three repositories,
+  2026-09-09** — the port allocation above (8083/8084/9090) was wrong, and
+  the way it was wrong turned out to be structural rather than numeric.
+  The server's scheme allocates **by service**: 8000 hub, 8080 BO,
+  8081-8089 REST APIs, 9011/9021/9031 sockets for Java/Python/C. One
+  container binding three slots across three categories cannot be made to
+  fit it by renumbering. The container was removed (ADR-0013), and the
+  question became "how many containers", not "which port".
+- **The answer: a kernel plus two services.**
+  [`sun-moon-platform-core`](https://github.com/schware/sun-moon-platform-core)
+  is the shared runtime — Netty listener binding, REST routing, the
+  off-event-loop execution contract, the MyBatis/Flyway/Micrometer/OTel
+  wiring — as a library with no `main`, no ports, and no domain.
+  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo)
+  is Back Office (8080, LAN-only); `sun-moon-java-platform` `master` keeps
+  what faces devices. Each service carries the kernel as a git submodule
+  wired through a Gradle composite build — no artifact registry, so no
+  publish token to keep alive for a dependency with two consumers on one
+  disk (ADR-0014).
+- **The boundary was made to hold before any repository was created**,
+  which is the part worth keeping: three things leaked downward — the
+  runtime bound a socket port itself, the HTTP initializer imported a
+  WebSocket echo handler, and the MyBatis config listed four domain
+  mappers. Each was a real coupling, each was fixed in place, and the 26
+  tests stayed green throughout. Only then was anything moved. BO's
+  packages were renamed `com.sunmoon.bo.*` so the direction of dependency
+  is visible at every import rather than asserted in a build file.
+- **Verified after the split, not just compiled**: BO starts from its own
+  `installDist` distribution and round-trips login, session cookie, and
+  Common Code CRUD; the three repositories hold 3 + 12 + 11 = 26 tests,
+  the same count as before. This narrows ADR-0002's "single runtime"
+  premise — Socket/REST/WebSocket/Batch together is still the platform's
+  shape, but BO was administration, not workload, and never belonged
+  inside it.
+- **A regression worth recording**: moving the pre-existing Spring Order
+  service from 8080 to 8083 (to free 8080 for BO) without opening 8083 in
+  UFW left it up, healthy, answering on `localhost` — and unreachable from
+  outside for hours. The symptom does not look like a firewall problem,
+  which is exactly why it cost time. Written into `Debian-Setting`'s
+  `docs/docker.md` next to the fix.
+
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
 Also per ADR-0008, **not yet confirmed**.
