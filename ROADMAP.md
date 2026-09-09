@@ -617,6 +617,38 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   context and settled two things: BO plays RIMS, and PUSH-OMS existed only
   because that system had no WebSocket — so this one does not need the
   split.
+- **What, 2026-09-10**: Built one of the two missing channel apps — the
+  order-placing channel — as `sun-moon-java-platform-channel-order`.
+  Store select → menu select → order, and that's the whole app. 10 stores
+  (1매장..10매장) and 10 menu items per store (1메뉴..10메뉴) are a fixed
+  catalog in code; no database, no login — same reasoning as the POS
+  channel, nothing here worth protecting. Followed BO's own ADR-0005
+  pattern (Spring + React embedded in the same jar, same-origin, no CORS);
+  no client-side router either, since the whole UI is two screens reached
+  by state, never a URL. Order gained a `menuName` field riding the
+  existing `data JSONB` column — no migration needed, unlike `storeId`
+  earlier, which needed a real column because it's queried on. The owner
+  explicitly excluded two things from today's scope: showing a store as
+  CLOSED when its POS terminal isn't live, and the periodic check that
+  would drive it (confirmed Spring's own `@Scheduled` — matching Order's
+  `AcceptanceTimeout` — is the right idiom here, not the Job/Step/Chunk
+  Batch engine; deferred anyway). Added a card on the `:8000` hub linking
+  to its own port (8085), same pattern as BO, unlike POS which is static
+  files on `:8000` itself. **Not on GitHub yet** — creating a new public
+  repo is outside this session's auto-run authorization, so the commit is
+  local only; the server got the source copied over directly and was
+  built and live-verified there instead.
+- **What, 2026-09-10**: Added a menu-registration screen to BO — menu
+  code/name/image URL/description, no 대/중/소 size tiers yet. Price isn't
+  a plain column the way `deviceType` is on Device — it's a `menu_prices`
+  history table, each row covering a date range (null end date = still
+  current), and "메뉴 연동" resolves to whichever row's range contains the
+  lookup date. Two overlapping ranges for the same menu are rejected
+  outright at write time, so there is never a date two rows disagree
+  about. Followed BO's existing `schema.sql` convention (hasn't moved to
+  Flyway the way Order has) and reused the Device/CommonCode screen
+  pattern, but the menu-list-plus-price-history-panel underneath is the
+  first master-detail screen in this family.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
