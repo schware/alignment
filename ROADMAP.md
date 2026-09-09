@@ -384,6 +384,34 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   in ADR-0007 (Dockerfile, Neon setup, Render env vars, switching
   `Bootstrap` off the in-memory fakes for prod, enabling the `Secure`
   cookie flag over real HTTPS). Not yet executed — CRUD screens come first.
+- **Deployed, 2026-09-09** — the Java platform now runs somewhere other
+  than a laptop, which is the concrete thing Phase 3 was always aiming at.
+  Same day, in order: Device CRUD (the last BO screen) and a BO/Order port
+  split; an as-built **design document** (`docs/DESIGN.md` + `_kr`), whose
+  writing surfaced a real defect — endpoints were running on Netty's
+  event-loop threads, so wiring the real JDBC adapters would have stalled
+  every connection those threads served; that was fixed (bounded worker
+  pool, ADR-0010) and proven with a test asserting the handler thread is
+  *not* an event loop; then Dockerfile, adapter auto-selection and the
+  `Secure` cookie flag (ADR-0011).
+- **Deployment target changed to the owner's own Debian server**
+  (ADR-0012), superseding the Render+Neon choice above. That research
+  assumed no existing infrastructure — but the server already running the
+  Spring Boot services is more free (already paid for), never sleeps, and
+  can publish more than one port, which Render cannot and which the Socket
+  transport will need for a Device Server. Ports were allocated against
+  what is actually listening there, not assumed: this platform took
+  8083/8084/9090 without touching the Spring services on 8080/8081/8082.
+- **What actually ran**: the Dockerfile built on first try (368 MB, on a
+  2010-era CPU), and on the server BO login, Common Code and Device CRUD
+  (Korean text included), the Order API, the Socket echo and Prometheus
+  metrics were all verified live. The four pre-existing services stayed at
+  200 throughout. Running in fake-repository mode; two `sudo` steps remain
+  (create the database, open UFW), which an automated session cannot do.
+- **Still unproven, and worth being plain about**: the 1,000-10,000
+  concurrent connection target. A 2010 4-core box shared with four other
+  containers is not where that gets tested, and no load test has been run
+  anywhere.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
