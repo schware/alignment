@@ -454,6 +454,49 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   which is exactly why it cost time. Written into `Debian-Setting`'s
   `docs/docker.md` next to the fix.
 
+- **BO reversed to Spring the same day, 2026-09-09** — and this one is
+  worth recording precisely because it undoes a decision made hours
+  earlier. Spring was dropped platform-wide on 2026-09-06, two days before
+  BO was proposed; BO never got its own decision, it inherited one made
+  when it did not exist. That inheritance was harmless while BO was
+  `/bo/*` routes inside a Netty runtime — Spring MVC cannot share a
+  process with raw Netty pipelines, so there was no choice to make. **The
+  repository split is what created the choice**, and the comparison was
+  one-sided: every mechanism BO hand-wrote (`SessionStore`, cookie
+  parsing, `PasswordHasher`, the `AuthorizedEndpoint` decorator) is what
+  `spring-boot-starter-security` exists to provide, every gap it still had
+  (Operator screen, CORS, distributed sessions) is configuration in
+  Spring, and BO has **no throughput requirement at all** — a handful of
+  operators. It was paying the full cost of having no framework and
+  collecting none of the benefit.
+- **What that produced**: `sun-moon-java-platform-bo`, the fourth service
+  in the *existing Spring MSA family* on that repo's `main` branch,
+  alongside Order/KDS/Delivery. The permission model survived the rewrite
+  unchanged — three tiers, `create` and `save` distinct because 신규 and
+  저장 are distinct permissions — now expressed as Spring Security
+  authorities so each controller states its requirement inline. 19 tests,
+  including the README's curl sequence driven through the real filter
+  chain. The Netty implementation is archived as
+  `sun-moon-platform-bo-netty`.
+- **The by-product was the more useful artifact.** "Follow the family's
+  conventions" turned out to be unanswerable: they existed only as "copy
+  the last service", and copying the wrong sibling is invisible. So the
+  umbrella repo now has `docs/CONVENTIONS.md` — every rule written as a
+  command that loops over all four services, so drift shows up as an odd
+  row. It caught two things immediately: BO had inherited Order's legacy
+  package name (`com.sunmoon.platform`, which KDS and Delivery do not
+  use), and **the umbrella's submodule pointers were four commits behind
+  on all three services** — the four missing commits being exactly the
+  conventions being documented.
+- **Honest note on the portfolio claim.** The hand-built BO demonstrated
+  understanding the mechanisms, and still exists with its reasoning
+  intact. What the reversal demonstrates is rarer and harder to fake:
+  noticing that a component carried the wrong amount of machinery for its
+  job, and undoing a decision from the same day rather than defending it.
+  The kernel extracted that morning now has one consumer instead of two,
+  and whether it still deserves a separate repository is left open rather
+  than answered by reflex.
+
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
 Also per ADR-0008, **not yet confirmed**.

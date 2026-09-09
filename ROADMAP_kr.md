@@ -338,6 +338,43 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   바로 시간을 잡아먹은 이유다. `Debian-Setting`의 `docs/docker.md`에
   해법과 나란히 적어뒀다.
 
+- **같은 날 BO를 Spring으로 되돌림, 2026-09-09** — 몇 시간 전의 결정을
+  뒤집은 것이라 오히려 기록할 값이 있다. Spring 포기는 2026-09-06에
+  platform 전체에 대해 정해졌고, BO 이야기가 나온 건 그 이틀 뒤다. 즉 BO는
+  자기 결정을 받은 적이 없고, 자기가 존재하지도 않던 시점의 결정을 물려받은
+  것이다. 물려받은 것 자체는 문제가 아니었다 — BO가 Netty runtime 안의
+  `/bo/*` route였을 때는 Spring MVC와 raw Netty pipeline이 한 프로세스에
+  못 있으니 선택지가 없었다. **선택지를 만든 건 저장소 분리였고**, 그러자
+  비교는 한쪽으로 기울었다. BO가 직접 만든 모든 것(`SessionStore`, cookie
+  파싱, `PasswordHasher`, `AuthorizedEndpoint` decorator)이
+  `spring-boot-starter-security`가 존재하는 이유 그 자체였고, 아직 없던
+  것들(운영자 관리 화면, CORS, 분산 session)은 Spring에서는 설정이며,
+  결정적으로 BO에는 **처리량 요구가 아예 없다** — 운영자 몇 명이다.
+  framework 없는 대가는 전부 치르고 이득은 하나도 못 받는 자리였다.
+- **결과물**: `sun-moon-java-platform-bo`. 그 저장소 `main` 브랜치의
+  *기존 Spring MSA 계열*에 Order/KDS/Delivery와 나란히 붙는 네 번째
+  service다. 권한 모델은 그대로 살아남았다 — 3단계, 신규와 저장이 다른
+  권한이므로 `create`와 `save`도 분리 — 다만 이제 Spring Security
+  authority로 표현돼서 controller마다 필요한 권한을 그 자리에 적는다.
+  테스트 19개, README의 curl 절차를 실제 filter chain으로 통과시키는 것까지
+  포함한다. Netty 구현은 `sun-moon-platform-bo-netty`로 archive했다.
+- **부산물이 더 쓸모 있었다.** "계열의 관례를 따르라"는 답할 수 없는
+  주문이었다 — 관례가 "직전 service를 복사한다"로만 존재했고, 잘못된
+  형제를 복사하면 티가 안 난다. 그래서 umbrella 저장소에
+  `docs/CONVENTIONS.md`를 뒀다. 모든 규칙이 네 service를 전부 도는 명령으로
+  쓰여 있어서, 어긋나면 출력에서 한 행만 다르게 나온다. 만들자마자 둘을
+  잡았다 — BO가 Order의 옛 package 이름(`com.sunmoon.platform`, KDS와
+  Delivery는 안 쓰는 것)을 물려받은 것, 그리고 **umbrella의 submodule
+  pointer가 세 service 모두 4커밋씩 뒤처져 있던 것**. 그 빠진 4커밋이
+  하필 문서화하려던 관례 그 자체였다.
+- **포트폴리오 주장에 대한 솔직한 메모.** 직접 만든 BO는 메커니즘을
+  이해하고 있음을 보여줬고, 그 코드와 근거는 archive된 채 그대로 남아 있다.
+  이번 반전이 보여주는 것은 그와 다르고 흉내내기 더 어렵다 — 어떤 부품이
+  자기 일에 비해 과한 기계를 지고 있다는 걸 알아채고, 같은 날 내린 결정을
+  방어하지 않고 되돌리는 것. 그날 아침 뽑아낸 kernel은 소비자가 둘에서
+  하나로 줄었고, 그래도 별도 저장소일 값이 있는지는 반사적으로 답하지 않고
+  열어뒀다.
+
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 
 역시 ADR-0008에 따라, **아직 확정 안 됨**.
