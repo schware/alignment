@@ -532,6 +532,56 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   resolving; the screens behind the login were not clicked through, since
   entering a password is not something an automated session does.
 
+- **The device-facing runtime found its purpose, 2026-09-09** — it had
+  been "8083 reserved, business undecided" in its own design document
+  since the split. It is the **Device Server**: it holds the terminals'
+  WebSocket connections and pushes them order events, which is what raw
+  Netty and a 10,000-connection target existed for. The Order service
+  gained a life cycle (PLACED → ACCEPTED/REJECTED/EXPIRED → PRODUCED →
+  DELIVERING → COMPLETED) with the transitions owned in one place, so the
+  different systems arriving in an order nobody controls cannot skip a
+  step; an illegal move is a 409 rather than a quiet overwrite.
+- **Two business rules that only exist because someone thought about
+  failure.** An order nobody accepts expires — and that rule lives in
+  Order rather than the Device Server, because it has to hold when the
+  Device Server is down. An order placed with no terminal connected is
+  refused immediately rather than left to time out — and that one lives in
+  the Device Server, because connectedness is only known there. Then a
+  third: a terminal that dropped moments ago gets three minutes of grace,
+  because "the shop is closed" and "the wifi blinked" are different
+  situations and the first rule punished the wrong one.
+- **A POS terminal in React/TypeScript**
+  (`sun-moon-terminal-pos`), the first of five repositories the owner
+  asked to split out. The WebSocket is treated as a nudge rather than as
+  the data: a frame means something changed, and the terminal then asks
+  what is true. That is what makes a screen unplugged for a minute come
+  back correct instead of showing a view assembled from whichever frames
+  it caught.
+- **Three defects that only running it could find**, and they are the
+  entry's real content. Netty compares a WebSocket's whole URI to the
+  configured path, so `/ws?deviceId=…` was not recognised as `/ws` —
+  invisible while the handler was an echo with no query string. The
+  kernel's `JsonResponses` could not serialize an `Instant` at all, which
+  turned any endpoint returning a timestamp into a 500. And Order
+  publishes plain JSON through Spring's `StringRedisTemplate` while
+  Redisson defaults to Kryo, so every event died on "unregistered class
+  ID" in a stack trace naming neither service. **No test on either side
+  could have caught the last one: each service was correct alone.**
+- **Flyway, at the owner's instruction, after schema.sql cost exactly what
+  it was documented as costing.** Two order rows written before the life
+  cycle existed deserialized with a null timestamp and stopped the expiry
+  sweep for every other order, every ten seconds. An idempotent `CREATE`
+  can add a column; it cannot reach the rows already there. A migration
+  fixed it in one file, and the family convention now points that way.
+- **Where it stands**: Order publishes to Redis and the Device Server
+  subscribes — both verified live, the first time the Redisson adapter has
+  ever run. The codec fix and the Flyway migration are pushed and
+  rebuilding. KDS, DID and the two channel apps are not built. The owner's
+  earlier production design (PUSH-OMS/OMS/RIMS/DV-POS) was shared as
+  context and settled two things: BO plays RIMS, and PUSH-OMS existed only
+  because that system had no WebSocket — so this one does not need the
+  split.
+
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
 Also per ADR-0008, **not yet confirmed**.
