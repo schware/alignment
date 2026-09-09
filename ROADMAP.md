@@ -497,6 +497,41 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   and whether it still deserves a separate repository is left open rather
   than answered by reflex.
 
+- **BO got a console, in TypeScript + React, 2026-09-09** — and this is
+  the entry that touches Phase 4. BO had been an API with Swagger UI
+  standing in for screens: fine for proving endpoints, useless for showing
+  an operator what they are allowed to do. I had started a plain HTML/JS
+  version and said so in one line without asking; the owner asked what the
+  frontend language had been decided as, which was the right question,
+  because it had not been decided — it had been assumed. **Phase 4's
+  TypeScript Dashboard is the reason it went to TypeScript.** Building the
+  console there turns that phase from the most-likely-to-be-cut item into
+  an artifact inside a system that already runs.
+- **It ships inside BO's own jar**, built by a `node:20-alpine` stage in
+  the Dockerfile so the 2010-era deploy host still has no Node on it. The
+  reason is not neatness: **BO has no CORS configuration**, so a frontend
+  on its own origin could not send the session cookie or the CSRF token
+  until one existed. Same origin removes that class of problem rather than
+  solving it.
+- **One design flaw surfaced and was fixed during the build**: the SPA
+  route `/bo/board` and the endpoint `GET /bo/board` were the same URL, so
+  refreshing a screen returned JSON. The API moved to `/bo/api/*`, and the
+  client routes forward to `index.html` one enumerated path at a time — a
+  catch-all would have answered genuine API 404s with a page of HTML.
+- **What the console shows is the permission model itself.** The left menu
+  lists only screens the operator holds some permission on, home is a
+  table of what they may do on each, and buttons that would return 403 are
+  disabled. That is presentation only — every controller method still
+  carries its own `@PreAuthorize` — but it makes the three-tier model
+  visible for the first time, which is worth more in an interview than the
+  model existing in code.
+- A **공지사항 board** was added as the first screen built end to end this
+  way (domain → JDBC → controller → screen), with its author taken from
+  the session rather than the request body and a test pinning that. 27
+  tests. Verified as far as the login screen rendering and every route
+  resolving; the screens behind the login were not clicked through, since
+  entering a password is not something an automated session does.
+
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
 Also per ADR-0008, **not yet confirmed**.
