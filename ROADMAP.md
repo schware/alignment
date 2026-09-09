@@ -573,10 +573,46 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   sweep for every other order, every ten seconds. An idempotent `CREATE`
   can add a column; it cannot reach the rows already there. A migration
   fixed it in one file, and the family convention now points that way.
+- **A terminal turned out to be `(store, device id)`, not a device id** —
+  found by the owner opening two POS browser windows for two shops, which
+  is exactly what the screen exists to let someone do. Keying the
+  registry on device id alone made both shops' `pos-01` the same
+  terminal: each connection displaced the other, each displacement looked
+  like an ordinary dropped socket, each side reconnected, and the two
+  windows knocked each other offline in a loop that burned a CPU core
+  until stopped by hand. That was not a usage mistake; the model was
+  wrong, and the loop was a demonstration of exactly how wrong. Re-keyed
+  as `TerminalId(storeId, deviceId)` for the connection and
+  `TerminalGroup(storeId, type)` for routing and the grace-period check,
+  with a genuinely displaced connection now closed with WebSocket code
+  4001 so the losing client stops fighting for an id it no longer holds
+  instead of retrying forever.
+- **End to end, confirmed live** — not through the app's own account of
+  itself. A real WebSocket client connected as `store-01/pos-01`; an
+  order placed at a store with no terminal present was auto-rejected in
+  well under a second; one placed with that terminal connected stayed
+  `PLACED` and the push frame arrived at the client; accepting it through
+  the Device Server's proxy set Order's `acceptedBy` to `pos-01`, checked
+  by querying Order directly rather than trusting the proxy's reply; and
+  re-accepting the same order came back 409. The browser automation tool
+  used earlier turned out to sandbox outbound connections to a port other
+  than the one it navigated to, which looked like a connection failure
+  and was actually the tool, not the app — worth remembering the next
+  time a "the browser can't connect" result doesn't match what curl says.
 - **Where it stands**: Order publishes to Redis and the Device Server
   subscribes — both verified live, the first time the Redisson adapter has
-  ever run. The codec fix and the Flyway migration are pushed and
-  rebuilding. KDS, DID and the two channel apps are not built. The owner's
+  ever run.
+  [`sun-moon-terminal-pos`](https://github.com/schware/sun-moon-terminal-pos)
+  (React + TypeScript) is built, deployed as static files on the `:8000`
+  hub, and is deliberately public and unauthenticated — every order in
+  this system is a preset sample by design, so there is nothing behind
+  that screen worth protecting yet; that boundary gets revisited the day
+  a real order exists. KDS, DID and the two channel apps
+  (order-placing, delivery) are not built. Also not enforced: the
+  owner's rule that a store may have several terminals but only one
+  receives orders — it needs BO to know about stores and a
+  `receivesOrders` flag, blocked on a service-to-service auth decision
+  between the Device Server and BO that has not been made. The owner's
   earlier production design (PUSH-OMS/OMS/RIMS/DV-POS) was shared as
   context and settled two things: BO plays RIMS, and PUSH-OMS existed only
   because that system had no WebSocket — so this one does not need the

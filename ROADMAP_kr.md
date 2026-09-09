@@ -404,6 +404,65 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   27개. 검증은 로그인 화면이 그려지고 모든 경로가 해석되는 데까지다 —
   로그인 뒤 화면은 직접 눌러보지 않았다. 비밀번호를 대신 입력하는 것은
   자동화 세션이 할 일이 아니기 때문이다.
+- **Netty runtime이 자기 업무를 찾았다 — Device Server.** 분리 이후 계속
+  "8083 예약, 업무 미정"이었던 그 빈칸이 채워졌다. 단말(POS/KDS/DID)의
+  WebSocket 연결을 붙들고, Order service의 Redis 이벤트를 받아 그
+  단말들에 push한다 — raw Netty와 동시접속 1만 목표가 애초에 있던
+  이유다. Order에는 진짜 생애주기가 생겼다(PLACED →
+  ACCEPTED/REJECTED/EXPIRED → PRODUCED → DELIVERING → COMPLETED, 잘못된
+  전이는 409). port는 8087로 옮겼다 — 8083은 이제 Spring Order service의
+  영구 자리다.
+- **직접 돌려보지 않았으면 못 잡았을 결함 셋.** Netty의 WebSocket
+  handler가 URI 전체를 경로와 비교해서 `/ws?deviceId=…`가 `/ws`로 인식
+  안 됐다 — echo 시절엔 query string이 없어서 안 드러났다. Kernel의
+  `JsonResponses`가 `Instant`를 아예 직렬화 못 해서, 시각을 반환하는
+  어떤 endpoint도 500이 났다. 그리고 Order는 Spring의
+  `StringRedisTemplate`로 평문 JSON을 발행하는데 Redisson은 기본이
+  Kryo라서, 모든 이벤트가 "unregistered class ID"로 죽었고 스택트레이스에
+  두 서비스 이름 중 어느 것도 안 나왔다. **마지막 것은 어느 쪽 단위
+  테스트로도 못 잡는다 — 두 서비스 각자는 완전히 정상이었다.**
+- **schema.sql이 문서에 적어둔 대로 정확히 대가를 치렀다, owner
+  지시로 Flyway로.** 생애주기가 생기기 전에 쓰인 주문 행 두 개가
+  timestamp가 null인 채로 역직렬화됐고, 만료 sweep이 10초마다 그
+  주문들에서 죽으면서 다른 모든 주문의 만료도 같이 막았다. 멱등한
+  `CREATE`는 컬럼을 추가할 수 있어도 이미 있는 행은 못 고친다. Migration
+  하나로 해결했고, 계열 관례도 그쪽으로 방향을 틀었다.
+- **단말은 device id가 아니라 `(매장, device id)`였다** —
+  owner가 두 매장용 POS 브라우저 창을 두 개 열어보면서 드러났다, 그
+  화면이 애초에 그러라고 만든 것인데. Device id만으로 키를 잡으니 두
+  매장의 첫 카운터가 같은 단말이 됐다 — 연결마다 서로를 밀어내고, 밀려난
+  쪽은 평범하게 끊긴 것처럼 보여서 재접속했고, 두 창이 서로를 끝없이
+  끊어내는 루프가 CPU 코어 하나를 잡아먹었다. 이건 사용 실수가 아니라
+  모델이 틀린 것이었고, 그 루프는 정확히 얼마나 틀렸는지의 시연이었다.
+  `TerminalId(storeId, deviceId)`(연결 식별용)와
+  `TerminalGroup(storeId, type)`(라우팅·유예 판단용)로 다시 키를 잡았고,
+  진짜로 밀려난 연결은 WebSocket code 4001로 닫혀서 그 클라이언트가 더
+  이상 갖고 있지 않은 id를 붙잡고 영원히 재시도하는 대신 멈춘다.
+- **End to end, 실물로 확인** — 이 앱 자신의 말이 아니라. 실제
+  WebSocket client가 `store-01/pos-01`로 접속한 상태에서: 단말 없는
+  매장에 넣은 주문은 1초도 안 돼 자동 거절; 그 단말이 붙어 있는 매장에
+  넣은 주문은 `PLACED`로 남고 push 프레임이 그 client에 도착; 이 서버의
+  중계로 수락하면 Order의 `acceptedBy`가 `pos-01`로 실제 기록됨(중계의
+  응답만이 아니라 Order를 직접 조회해서 재확인); 이미 수락된 주문을
+  다시 수락하면 409. 세션 앞부분에 쓴 브라우저 자동화 도구는 자기가
+  navigate한 것과 다른 port로 나가는 요청을 자체적으로 막고 있었는데,
+  겉으론 연결 실패처럼 보였지만 실제로는 앱이 아니라 그 도구의
+  문제였다 — "브라우저가 연결이 안 된다"는 결과가 curl과 다르게 나올 때
+  다시 떠올릴 만한 일이다.
+- **지금 상태**: Order가 Redis에 발행하고 Device Server가 구독하는 것 —
+  둘 다 라이브 검증됐고, Redisson adapter가 처음으로 실제 돌아본
+  순간이다. [`sun-moon-terminal-pos`](https://github.com/schware/sun-moon-terminal-pos)
+  (React + TypeScript)를 만들어 `:8000` hub에 정적 파일로 배포했고,
+  일부러 공개·미인증 상태로 뒀다 — 이 시스템의 모든 주문은 설계상
+  샘플이라, 지금은 그 화면 뒤에 보호할 게 없다. 그 경계는 진짜 주문이
+  생기는 날 다시 봐야 한다. KDS, DID, 그리고 채널 앱 둘(주문 접수,
+  배달)은 아직 없다. 강제도 안 되는 것: owner의 규칙 — 한 매장에 단말이
+  여럿일 수 있지만 주문을 받는 건 하나뿐 — 이 자리가 없다. BO가 매장을
+  알아야 하고 `receivesOrders` 플래그가 있어야 하는데, Device Server와
+  BO 사이의 서비스 간 인증 결정이 안 돼서 막혀 있다. owner의 예전 실전
+  설계(PUSH-OMS/OMS/RIMS/DV-POS)를 참고로 공유받아 두 가지를 정리했다:
+  BO가 RIMS 역할을 하고, PUSH-OMS는 그 시스템에 WebSocket이 없어서
+  나뉜 것이었으므로 여기는 그 분리가 필요 없다.
 
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 
