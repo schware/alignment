@@ -426,7 +426,7 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   is the shared runtime — Netty listener binding, REST routing, the
   off-event-loop execution contract, the MyBatis/Flyway/Micrometer/OTel
   wiring — as a library with no `main`, no ports, and no domain.
-  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo)
+  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo-netty)
   is Back Office (8080, LAN-only); `sun-moon-java-platform` `master` keeps
   what faces devices. Each service carries the kernel as a git submodule
   wired through a Gradle composite build — no artifact registry, so no

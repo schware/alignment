@@ -310,7 +310,7 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   공용 runtime이다 — Netty listener bind, REST routing, event loop 밖에서
   실행한다는 계약, MyBatis/Flyway/Micrometer/OTel 결선. `main`도 port도
   domain도 없는 library다.
-  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo)가
+  [`sun-moon-platform-bo`](https://github.com/schware/sun-moon-platform-bo-netty)가
   Back Office(8080, LAN 전용)이고, `sun-moon-java-platform`의 `master`는
   장비를 마주하는 쪽을 갖는다. 각 service는 kernel을 git submodule로
   물고 Gradle composite build로 쓴다 — artifact registry를 안 쓰므로,
