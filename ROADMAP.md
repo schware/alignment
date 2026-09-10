@@ -637,6 +637,26 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   files on `:8000` itself. It lives in
   [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order),
   the umbrella's fifth submodule.
+- **What, 2026-09-10**: The owner handed over a 설계서 for the whole flow —
+  order channel, delivery channel, KDS, DID, and a sales model keyed by
+  `(매출일자, 매장, 단말기번호, 거래번호)` with 거래번호 minted at
+  acceptance. Two foundations were missing and both were built: **매장
+  master in BO** (there was no store anywhere — `store-01` was a bare
+  string in each service and a hardcoded list of ten in the channel), and
+  **영업일 in Order** (개점/마감, with every order stamped with the
+  영업일자 that was open when it arrived, and a store that has not opened
+  refused outright). Two judgement calls, both recorded in the umbrella's
+  ADR-0006: 영업 상태 sits in Order rather than BO because it is read on
+  the write path and a cross-service hop inside a sale is the wrong
+  shape; and **no timer closes a store** — a shop serving at 00:30 has
+  not finished its day, so the day rolls when a person presses 마감, or
+  presses 개점 on a day that has gone stale. That also retires the older
+  idea of inferring "this shop is closed" from whether a POS WebSocket
+  happened to be connected. Still ahead: the
+  `Order_header/Detail/Pay/Etc` + `Tr_*` restructure (which reverses
+  ADR-0001's JSONB choice for this service), 거래번호 itself, the
+  회원번호 rule (date + sequence + CRC), and the three terminal screens —
+  KDS and DID repos exist but are empty.
 - **What, 2026-09-10**: Fixed the POS screen for anyone outside the LAN.
   Two separate faults wearing one symptom ("Device Server와 연결이
   끊겼습니다"). First, the hub's POS card linked the LAN address while
