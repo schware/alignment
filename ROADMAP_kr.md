@@ -481,6 +481,20 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   다르다. 저장소는
   [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order)로
   umbrella의 다섯 번째 submodule이다.
+- **무엇, 2026-09-10**: LAN 밖에서 POS 화면이 안 되던 것을 고쳤다.
+  증상은 하나("Device Server와 연결이 끊겼습니다")였지만 원인은 둘이었다.
+  하나는 허브의 POS 카드가 내부 IP로 링크돼 있던 것 — 다른 공개 카드는
+  전부 공인 IP였다. 진짜 원인은 두 번째로, Device Server 주소가 빌드
+  시점에 번들에 박히는데(`VITE_DEVICE_SERVER`) 그 **기본값**이 내부
+  IP였다. 그래서 배포된 화면은 LAN 안에서만 동작했다. 기본값을 공인
+  주소로 바꿨다 — 변수를 깜빡한 빌드가 실제로 나가는 값이 기본값이기
+  때문이다. 그리고 세 번째가 수정을 가렸다: `index.html`에는 해시가
+  안 붙고 nginx가 `Cache-Control`도 안 보내서, 브라우저가 옛 번들을
+  계속 쓰고 있었다. **배운 건 기술이 아니라 진단 순서였다** — nginx
+  접근 로그에 client IP와 브라우저가 받아간 번들 이름이 그대로 찍혀
+  있어서, 소유자가 밖에서 접속 중이라는 것과 배포 후 요청이 한 건도
+  안 왔다는 것을 둘 다 보여줬다. 그걸 먼저 봤으면 30분의 추측이
+  필요 없었다.
 - **무엇, 2026-09-10**: BO에 메뉴 등록 화면을 추가했다 —
   메뉴코드/이름/이미지 URL/설명, 대/중/소 옵션은 이번에 뺐다. 가격은
   Device의 `deviceType`처럼 그냥 컬럼이 아니라, `menu_prices`라는

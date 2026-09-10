@@ -637,6 +637,22 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   files on `:8000` itself. It lives in
   [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order),
   the umbrella's fifth submodule.
+- **What, 2026-09-10**: Fixed the POS screen for anyone outside the LAN.
+  Two separate faults wearing one symptom ("Device Server와 연결이
+  끊겼습니다"). First, the hub's POS card linked the LAN address while
+  every other public card used the public one. Second — the real one —
+  the Device Server's address is baked into the POS bundle at build time
+  (`VITE_DEVICE_SERVER`) and its *default* was the LAN address, so the
+  deployed build worked from inside the network and nowhere else; the
+  default is now the public address, because the default is what a build
+  that forgets the variable will ship. Then a third thing masked the
+  fix: `index.html` carries no content hash and nginx sends no
+  `Cache-Control`, so the browser kept serving the old bundle and the
+  screen looked unfixed. **The lesson was diagnostic, not technical** —
+  nginx's access log names the client IP and the exact bundle each
+  browser took, and it showed both that the owner was browsing from
+  outside and that no request had arrived since the deploy. Reading it
+  first would have replaced half an hour of guessing.
 - **What, 2026-09-10**: Added a menu-registration screen to BO — menu
   code/name/image URL/description, no 대/중/소 size tiers yet. Price isn't
   a plain column the way `deviceType` is on Device — it's a `menu_prices`
