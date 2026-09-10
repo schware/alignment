@@ -637,6 +637,25 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   files on `:8000` itself. It lives in
   [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order),
   the umbrella's fifth submodule.
+- **Direction settled, 2026-09-10** (discussion, nothing built): whether
+  to fold the Netty Device Server — "POS SERVER" — into BO. The owner's
+  starting instinct was that BO and OMS clearly split but BO and POS
+  SERVER could merge. Conclusion: keep three, and the decisive reason is
+  **exposure** — BO is LAN-only on plain HTTP by decision while terminals
+  connect from the internet, so one process would force one policy and
+  neither option is acceptable until TLS. Behind that: they scale on
+  different axes (operators vs terminals), and BO cannot run more than
+  one instance today. What actually made merging attractive turned out to
+  be a data-access problem — POS SERVER cannot check devices against BO's
+  list — which read-only access to BO's tables solves without merging.
+  The shape that came out of it: **BO shows and commands, POS SERVER owns
+  the state** (control plane / data plane), with BO's existing three-tier
+  permissions letting one console serve 기준정보 / 운영·정산 / 헬프데스크
+  as different faces. Worth noting the honest part: the *original*
+  industry reason for a separate terminal server — connection handling
+  was expensive — has largely evaporated (virtual threads, brokers). The
+  boundary survives for different reasons than it was created for, and
+  TLS is what would reopen the question.
 - **What, 2026-09-10**: The owner handed over a 설계서 for the whole flow —
   order channel, delivery channel, KDS, DID, and a sales model keyed by
   `(매출일자, 매장, 단말기번호, 거래번호)` with 거래번호 minted at
