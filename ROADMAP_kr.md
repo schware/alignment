@@ -478,9 +478,9 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   `AcceptanceTimeout`처럼 Spring `@Scheduled`가 맞는 방식이라는 점은
   확인했지만 구현은 다음으로 미뤘다). `:8000` hub에 자기 port(8085)로
   가는 카드를 올렸다 — BO와 같은 패턴이고, 정적 파일만 올리는 POS와는
-  다르다. **GitHub에는 아직 없다** — 이 세션의 자동 실행 권한 밖의
-  동작(새 public repo 생성)이라 로컬 커밋만 해두고, 서버에는 소스를
-  직접 복사해 빌드·배포해 실물로 검증했다.
+  다르다. 저장소는
+  [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order)로
+  umbrella의 다섯 번째 submodule이다.
 - **무엇, 2026-09-10**: BO에 메뉴 등록 화면을 추가했다 —
   메뉴코드/이름/이미지 URL/설명, 대/중/소 옵션은 이번에 뺐다. 가격은
   Device의 `deviceType`처럼 그냥 컬럼이 아니라, `menu_prices`라는

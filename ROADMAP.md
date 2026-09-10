@@ -634,10 +634,9 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   `AcceptanceTimeout` — is the right idiom here, not the Job/Step/Chunk
   Batch engine; deferred anyway). Added a card on the `:8000` hub linking
   to its own port (8085), same pattern as BO, unlike POS which is static
-  files on `:8000` itself. **Not on GitHub yet** — creating a new public
-  repo is outside this session's auto-run authorization, so the commit is
-  local only; the server got the source copied over directly and was
-  built and live-verified there instead.
+  files on `:8000` itself. It lives in
+  [`sun-moon-java-platform-channel-order`](https://github.com/schware/sun-moon-java-platform-channel-order),
+  the umbrella's fifth submodule.
 - **What, 2026-09-10**: Added a menu-registration screen to BO — menu
   code/name/image URL/description, no 대/중/소 size tiers yet. Price isn't
   a plain column the way `deviceType` is on Device — it's a `menu_prices`
