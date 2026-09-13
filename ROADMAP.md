@@ -742,6 +742,41 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   missing last time — worth diffing against the service's own
   documented env vars (`application.yml`'s defaults), not against
   the previous invocation.
+- **What, 2026-09-13**: Wired 메뉴별 KDS routing end to end — a menu item
+  can be assigned to a specific KDS station, so an accepted order for it
+  pushes to only that KDS instead of every KDS at the store. Touched four
+  repos: `kdsDeviceId` rides on Order/OrderEvent like `menuName` does (no
+  migration); the order channel's own catalog is what actually sets it,
+  split across two demo stations to prove the mechanism; the Device
+  Server targets one terminal via the registry's existing `channelFor`
+  rather than broadcasting; BO's menu screen got the same field, but only
+  as a display for when its menu master becomes the real catalog — it
+  isn't wired to real orders today.
+
+  **Two real bugs found while verifying this live, both fixed:**
+  (1) The owner caught the first from a screenshot: `TerminalId` keyed on
+  (storeId, deviceId) only, no terminal-kind component, so a store's POS
+  and KDS opened with the same device id "01" displaced each other —
+  exactly the bug storeId itself was added to fix, one level up. Fixed by
+  adding `type` to the identity; a multi-store DID (below) needed that
+  same identity to drop storeId entirely, since a screen watching several
+  branches isn't "at" any one of them.
+  (2) Found by opening two KDS tabs side by side: the per-station *push*
+  worked, but each KDS's own list-fetch (`GET /orders`) has no
+  server-side filtering, so a 15s poll or a fresh page load showed every
+  station's orders on every screen regardless — the push half of a fix
+  without the poll half is not a fix, it just delays when the gap shows.
+- **What, 2026-09-13**: Following on from a "what if DID could be
+  smarter about location" aside, the owner proposed the more useful
+  version of it: **one DID watching several stores at once**, food-court
+  style, rather than splitting one store's DID into zones. `storeId` at
+  handshake may now be a comma-separated list for DID only (POS/KDS still
+  reject anything but exactly one — a counter is physically at one
+  store). The Device Server registers that connection into every listed
+  store's own DID group, so the *existing* per-store broadcast already
+  reaches it — the push path needed zero changes. Live-verified with a
+  single DID tab showing two stores' ready orders simultaneously, each
+  labeled, while a third (unwatched) store's order never appeared.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
