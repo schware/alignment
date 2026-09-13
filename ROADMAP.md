@@ -777,6 +777,19 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   reaches it — the push path needed zero changes. Live-verified with a
   single DID tab showing two stores' ready orders simultaneously, each
   labeled, while a third (unwatched) store's order never appeared.
+- **What, 2026-09-13**: The owner asked why POS had no date-management
+  UI, and the answer was that there wasn't one — 개점/마감 (open/close
+  the store for the day) had been a backend-only feature since
+  2026-09-10 (Order's own endpoints, umbrella `docs/adr/0006`), and
+  every store on the deploy server had only ever been opened by a direct
+  curl to Order. Nobody had built the button. Proxied it through the
+  Device Server the same way as everything else a terminal reaches
+  (`GET /business-days/status`, `POST /business-days/{open,close}`,
+  the body forwarded to Order verbatim rather than parsed and rebuilt),
+  and added a status bar under POS's header with the two buttons.
+  Live-verified by actually clicking 마감 then 개점 in a real browser —
+  not curl — and watching the screen's own state flip in response, the
+  same round trip curl had already proven at the API level.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
