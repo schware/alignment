@@ -540,6 +540,26 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   안 옮김)을 그대로 따랐고, 화면도 Device/CommonCode 패턴을 재사용하되
   메뉴 목록 아래 가격 이력 패널을 붙이는 master-detail 구조는 이번에
   처음 생겼다.
+- **무엇, 2026-09-13**: 남은 단말 화면 두 개 — KDS, DID — 를
+  `sun-moon-terminal-kds`, `sun-moon-terminal-did`로 만들었다.
+  `sun-moon-terminal-pos`와 같은 모양이다. 거의 전부 프런트엔드
+  작업이었다 — Device Server는 이 화면들이 생기기 전부터 이미
+  `ACCEPTED`→KDS, `PRODUCED`→DID로 라우팅하고 있었고
+  (`OrderEventSubscriber.audienceFor`), 백엔드는 새로 만들 게 없었다.
+  DID의 15초 "준비완료" 표시는 서버 타이머가 아니라 화면 자체의
+  발상이다 — 딜리버리 채널이 없어서 아무것도 `PRODUCED`를 다음
+  단계로 넘기지 않으니, 화면이 각 주문을 "처음 본 시점"을 메모리에
+  기록해두고 그때부터 15초를 보여준다. 실제로 얼마나 오래
+  `PRODUCED` 상태였는지와는 무관하다. 겸사겸사 BO의 장비 화면에
+  POS/KDS/DID를 1급으로 다룰 수 있게 손봤다: 자유 텍스트 `deviceType`과
+  별도로 `terminalType` 컬럼을 추가해서(Device Server 자신의 enum과
+  맞춘다) 행이 "이건 POS다"라고 말할 수 있게 했고, `ipAddress`/`port`와
+  온디맨드 TCP 연결 확인을 붙였다 — 일부러 버튼으로만 뒀다, 예전에
+  미뤄둔 Batch/주기적 체크 논의를 조용히 다시 여는 걸 피하려고.
+  솔직히 짚어둘 것: 그 연결 확인은 그 주소에 뭔가 응답한다는 것만
+  증명하지, 단말 소프트웨어가 실제로 돌고 있다는 걸 증명하지 않는다 —
+  POS/KDS/DID는 자기 소켓이 없는 브라우저 탭이라, "이 단말이 접속
+  중인가"의 진짜 답은 여전히 Device Server의 실시간 접속 registry다.
 
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 

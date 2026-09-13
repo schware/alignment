@@ -703,6 +703,28 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   Flyway the way Order has) and reused the Device/CommonCode screen
   pattern, but the menu-list-plus-price-history-panel underneath is the
   first master-detail screen in this family.
+- **What, 2026-09-13**: Built the last two terminal screens — KDS and
+  DID — as `sun-moon-terminal-kds` and `sun-moon-terminal-did`, same
+  shape as `sun-moon-terminal-pos`. This was almost entirely a frontend
+  task: the Device Server had already routed `ACCEPTED`→KDS and
+  `PRODUCED`→DID since before any of these screens existed
+  (`OrderEventSubscriber.audienceFor`), so the backend needed nothing
+  new. DID's 15-second "ready" window is the screen's own invention, not
+  a server-side timer — nothing moves an order past `PRODUCED` until a
+  delivery channel exists, so the screen tracks per-order "first seen"
+  itself in memory and shows it for 15s from there, independent of how
+  long the order has actually been ready. Also gave BO's Device screen
+  what it was missing to make POS/KDS/DID first-class there: a
+  `terminalType` column separate from the free-text `deviceType` (so a
+  row can finally say "this is a POS", matching the Device Server's own
+  enum), plus `ipAddress`/`port` and an on-demand TCP connection check —
+  deliberately a button, not a poller, to avoid quietly reopening the
+  Batch/periodic-check question that was shelved earlier. Worth being
+  honest about: that connection check only proves something is listening
+  on that address, not that the terminal software is running — POS/KDS/
+  DID are browser tabs with no socket of their own, so the Device
+  Server's live connection registry remains the real answer to "is this
+  terminal connected."
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
