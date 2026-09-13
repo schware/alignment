@@ -725,6 +725,23 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   DID are browser tabs with no socket of their own, so the Device
   Server's live connection registry remains the real answer to "is this
   terminal connected."
+- **Bug found and fixed while verifying the above end to end, 2026-09-13**:
+  Order's deployed container had no `EVENTS_REDIS=true`, so it had been
+  running on the log-only `InMemoryEventPublisher` instead of
+  `RedisEventPublisher` — real-time push to every terminal had quietly
+  been a no-op. Nothing failed loudly: every screen still worked off its
+  own ~15s poll, so the system looked fine and just felt slightly stale.
+  Caught by placing a fresh order and finding the Device Server's logs
+  had nothing for it. `docker-start-all.sh` never set the flag, and
+  every redeploy of Order (including a couple done in this project
+  earlier this same week) carried the gap forward by copying the same
+  `docker run` line. Fixed on the server and in the script, and
+  documented as a warning in both the Order repo's README and
+  Debian-Setting's docker.md. The general lesson, worth keeping: a
+  redeploy that "copies last time's command" propagates whatever was
+  missing last time — worth diffing against the service's own
+  documented env vars (`application.yml`'s defaults), not against
+  the previous invocation.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
