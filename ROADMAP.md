@@ -833,6 +833,48 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   recover), and nobody can delete the account they are signed in as —
   the session outlives the row, and every click after that looks like BO
   is broken.
+- **What, 2026-09-15 (later the same day)**: the owner named two gaps —
+  KDS and DID **knew nothing about 판매일자**, and the order channel
+  **placed the order on the tap**. Both already had their materials:
+  every order arrives stamped with its 판매일자 and both terminals' own
+  `Order` interfaces simply did not declare the field, so it was being
+  received and discarded; and the business-day endpoint POS uses through
+  the Device Server was already open to any terminal. The filter is
+  **derived, not stored** — so there is no "reset" step, and therefore
+  nowhere to forget to run it. DID judges per store, because a food court
+  does not close as a unit.
+- **Bug the owner found by watching the screen, 2026-09-15**: "why does
+  DID keep showing old orders, then hiding them, then showing them
+  again?" It was a real loop. The 15-second expiry deleted the card, the
+  order was still `PRODUCED` on the server (nothing moves it past that
+  yet), and the next poll picked it up as if new and granted another 15
+  seconds — all day. The README recorded the limitation as "a *reload*
+  will replay orders"; the same gap was replaying them with no reload at
+  all. Fixed by remembering ids whose window is spent, recorded **as the
+  card leaves** rather than as it arrives — so an order still on screen
+  when the tab closes gets its window again, while one that has had it
+  never returns. The real fix is upstream: a delivery channel moving
+  orders past `PRODUCED` stops the server handing this screen the same
+  order forever.
+- **What, 2026-09-15**: the order channel now asks before placing. The
+  **shape** matters more than the question — the steps between tapping
+  and placing are a declared array (`FLOW`), so adding one is a name in
+  that array plus a case in the renderer. 결제 goes there. Submitting and
+  reporting the result are deliberately outside that list: they are not
+  something a customer does, and mixing them in would mean every new step
+  had to be careful not to land after the order was already placed.
+- **What, 2026-09-15**: with the Java work's shape settled and the owner
+  about to start editing directly, wrote the development-environment doc
+  that was missing in front of the deploy one
+  (`Debian-Setting/docs/development.md`): where to sit, what to edit
+  with, and by what route the edit reaches the server. Two facts decide
+  almost all of it — **the server has no Node, and the working machine
+  has no Docker.** So a Spring service is push-then-`docker build` on the
+  server (true even when only its screen changed, since the bundle lives
+  in the jar), while a terminal screen is `npm run build` locally and
+  tar-over-ssh, touching Docker not at all. Editing on the server is
+  explicitly discouraged: those edits are not in git and vanish on the
+  next pull.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
