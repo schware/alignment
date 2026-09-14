@@ -790,6 +790,49 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   Live-verified by actually clicking 마감 then 개점 in a real browser —
   not curl — and watching the screen's own state flip in response, the
   same round trip curl had already proven at the API level.
+- **What, 2026-09-15**: Added the three operator screens BO was missing —
+  매출 조회 (by 영업일자), 단말 현황, and 운영자 관리. The first two
+  **own nothing**: 매출 is read from Order and connection state from the
+  Device Server, freshly on every page load. A copy in BO would mean a
+  screen confidently showing a state that is minutes stale, which removes
+  the reason those screens exist. So both are read-only and will stay
+  that way — an admin console able to edit 매출 makes it impossible to say
+  which side is true. A dead upstream renders as a 502 naming the service
+  rather than an empty table: "어제 매출이 0원" and "매출을 물어볼 수
+  없었다" are different facts, and this family has already lost an hour to
+  a silently disabled event publisher that looked like a terminal bug.
+- **Where the design becomes a screen, 2026-09-15**: 단말 현황 is the
+  first place the control plane and the execution plane are visible side
+  by side. BO decides what should exist; the Device Server knows what
+  does. The two ways they disagree *are* the screen — registered but not
+  connected (a counter with no screen up, so that shop takes no orders),
+  and connected but not registered (a screen that got in as an id nobody
+  entered in 장비). The second exists because the Device Server checks
+  only that a device id is well-formed, not that BO knows it, and this row
+  is currently the only place that gap is visible at all. Live-verified in
+  both directions: a real POS tab showing `connected:true`, and an
+  unregistered `kds-99` showing `registered:false`.
+- **What building the screen exposed, 2026-09-15**: BO's device master
+  **had no store.** The Device Server identifies a terminal as (매장,
+  단말기번호, 종류) — every branch has a `pos-01` — so with no store on
+  the BO side there was no way to line registered terminals up against
+  connected ones at all. It surfaced the moment the join was written: a
+  hole in a design does not look like a hole until something is built on
+  top of it. Same day, found that `WebConfig` was missing forwards for
+  `/menus` and `/stores` — navigating to them worked, refreshing 404'd,
+  and it had been that way for five days precisely because the path people
+  actually take was fine.
+- **운영자 관리, 2026-09-15**: the three-tier permission model has been
+  enforced since BO's first commit, but the only way to grant anything was
+  an INSERT by hand — which is why the deploy server has exactly one
+  account. Added the 화면 × 행위 matrix, and with it two guards in the
+  service (not the UI) against an admin console locking everyone out of
+  itself: the last 전체 관리자 cannot be demoted, deactivated or deleted
+  (the initial-account seed only runs when the operators table is
+  *empty*, so a table of ordinary accounts needs database access to
+  recover), and nobody can delete the account they are signed in as —
+  the session outlives the row, and every click after that looks like BO
+  is broken.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
