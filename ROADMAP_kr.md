@@ -694,6 +694,33 @@ Runtime Platform 전체로 확장했음을 기록한다 — 세 번째 Batch 데
   build 해서 tar-over-ssh로 올리며 Docker를 아예 거치지 않는다. 서버에서
   직접 편집하는 방식은 권하지 않는다고 못 박았다 — 그렇게 고친 것은
   git에 없어서 다음 pull에 사라진다.
+- **무엇, 2026-09-15**: 관측을 붙였다 — Prometheus(10001) + Grafana(10000)
+  + node_exporter(10002), 전부 LAN 전용. **service 코드는 한 줄도 안
+  고쳤다.** Spring 다섯 개는 `/actuator/prometheus`를, Device Server는
+  직접 만든 Micrometer registry가 `GET /metrics`를 이미 내고 있었고,
+  실제 작업물은 `prometheus.yml` 한 파일과 provisioning 파일 몇 개다.
+  타겟 8개 전부 `up=1`, 대시보드 쿼리 9개 전부 데이터 반환까지 확인했다.
+- **전용 화면이냐 BO에 붙이냐, 2026-09-15**: 소유자가 물었고, 답은
+  전용이다. 결정적인 이유는 **BO가 죽었을 때 왜 죽었는지 봐야 한다**는
+  것 — 감시하는 것이 감시받는 것 안에 들어가면 정확히 필요한 순간에 못
+  본다. 게다가 BO는 재배포마다 프로세스가 내려가는데 재배포야말로 지표를
+  보고 싶은 순간이고, 노출 정책도 다르다(BO는 잠깐 외부에 열 계획이
+  있다 — POS SERVER를 BO에 안 합친 것과 똑같은 이유가 그대로 반복된다).
+  다만 선은 도구가 아니라 **사실의 종류**로 긋는다: BO는 장사의 사실
+  (단말 현황, 매출, 영업일), Grafana는 기계의 사실(CPU, heap, GC,
+  응답시간). 이미 그렇게 되어 있다 — 단말 현황이 BO 쪽 답이다.
+- **붙이면서 드러난 것, 2026-09-15**: Device Server의 `/metrics`에 지표가
+  **하나뿐**이었다 — `/health`가 몇 번 불렸는지 세는 카운터. 200을
+  돌려주니 "계측되어 있다"고 분류돼 있었지만, 왜 느린지 물어보는 순간
+  아무 말도 못 하는 상태였다. kernel에 JVM binder를 묶고(Spring 다섯
+  개가 actuator에서 공짜로 받던 것) `terminals_connected` 게이지를
+  붙여 1종 → 29종이 됐다. 게이지는 연결/해제 때 증감시키지 않고 scrape
+  때 registry를 읽는다 — 손으로 세는 카운터는 해제 경로 하나를
+  놓치는 순간 어긋나고, 채널이 닫히는 경로는 여러 개다. 덤으로
+  micrometer를 `implementation`에서 `api`로 옮겼다: `get()`의 반환
+  타입이 이미 그 라이브러리 타입이라 처음부터 public surface였는데,
+  숨겨둔 탓에 kernel이 건네준 registry에 service가 자기 지표를 등록할
+  수 없었다.
 
 ## 제안됨 (아직 일정 없음) — C++: 범위를 좁힌 C++20 coroutine IOCP 해법
 

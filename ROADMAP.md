@@ -875,6 +875,38 @@ ADR-0009's Spring addition, keeping the stack Spring-free.
   tar-over-ssh, touching Docker not at all. Editing on the server is
   explicitly discouraged: those edits are not in git and vanish on the
   next pull.
+- **What, 2026-09-15**: observability, at last — Prometheus (10001) +
+  Grafana (10000) + node_exporter (10002), all LAN-only. **Not one line
+  of service code changed.** The five Spring services already exposed
+  `/actuator/prometheus` and the Device Server's own Micrometer registry
+  already served `GET /metrics`; the actual deliverable is one
+  `prometheus.yml` and a few provisioning files. Verified with all eight
+  targets at `up=1` and all nine dashboard queries returning data.
+- **Dedicated UI or bolt it onto BO, 2026-09-15**: the owner asked, and
+  the answer is dedicated. The decisive reason is that **you have to be
+  able to see why BO died** — a thing that watches must not live inside
+  the thing it watches, or it is absent exactly when it is needed. BO
+  also drops its process on every redeploy, and a redeploy is precisely
+  when you want the graph; and its exposure policy differs (BO is going
+  public briefly at some point) — the same argument that kept POS SERVER
+  out of BO, repeating verbatim. The line is drawn by **kind of fact**
+  rather than by tool, though: BO holds facts about the shop (단말 현황,
+  매출, 영업일), Grafana facts about the machine (CPU, heap, GC,
+  latency). That split already existed — 단말 현황 is the BO-side answer.
+- **What wiring it up exposed, 2026-09-15**: the Device Server's
+  `/metrics` had exactly **one** metric in it — a counter of how many
+  times `/health` had been called. It returned 200, so it had been
+  filed as "instrumented", while being unable to answer a single
+  question about why the process might be slow. Bound the JVM meters in
+  the kernel (what the five Spring services get free from actuator) and
+  added a `terminals_connected` gauge: 1 metric became 29. The gauges
+  read the registry at scrape time rather than being incremented on
+  connect and decremented on close — a hand-kept counter drifts the
+  first time a disconnect path is missed, and a channel can close
+  several ways. Micrometer also moved from `implementation` to `api`:
+  `get()` returns a `PrometheusMeterRegistry`, so it was always part of
+  the kernel's public surface, and hiding it only meant a service could
+  not register a metric against the registry the kernel handed it.
 
 ## Proposed (unscheduled) — C++: a focused C++20-coroutine IOCP fix
 
